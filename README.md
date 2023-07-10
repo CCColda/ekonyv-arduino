@@ -9,6 +9,8 @@ Egy Arduino MKRZERO-n és ETH shield-en futó szerver, ami könyvekről tárol a
 
 ## Roadmap
 - [x] Csatlakozás DHCP-re
+- [x] HTTP szerver és útelválasztás
+- [x] SD-kártya I/O
 - [ ] Event loop (~~fizikai → LCD frissítés~~ (később) → DHCP → bejövő → SD → kimenő)
 - [ ] Adatok veszteségmentes *?* tárolása az SD-kártyán
   - [ ] Fájlkezelés

@@ -1,6 +1,7 @@
 #include "network.h"
 
-#include "logger.h"
+#include "string.h"
+#include "to_string.h"
 
 #include <Ethernet.h>
 
@@ -11,34 +12,6 @@
 
 /* static */ const byte Network::STATIC_IP_ADDRESS[4] = {
     192, 168, 0, 78};
-
-/* private static */ String Network::ipToString(const IPAddress &address)
-{
-	String result = String((unsigned int)address[0], 10);
-	for (int i = 1; i < 4; ++i) {
-		result += String('.');
-		result += String((unsigned int)address[i], 10);
-	}
-	return result;
-}
-
-/* private static */ String Network::byteToString(byte b)
-{
-	return b < 0x10 ? String('0') + String((unsigned int)b, 0x10)
-	                : String((unsigned int)b, 0x10);
-}
-
-/* private static */ String Network::macToString(const byte *mac)
-{
-	String result = byteToString(mac[0]);
-	for (int i = 1; i < 6; ++i) {
-		result += String(':');
-
-		result += byteToString(mac[i]);
-	}
-
-	return result;
-}
 
 /* private static */ bool Network::checkAndLogHardwareErrors()
 {
@@ -56,17 +29,17 @@
 
 /* private static */ void Network::logNetworkInfo()
 {
-	logger.log(String("IP Address: ") + ipToString(Ethernet.localIP()));
+	logger.log(String("IP Address: ") + ip_to_string(Ethernet.localIP()));
 
 	byte mac[6] = {};
 	Ethernet.MACAddress(mac);
 
-	logger.log(String("MAC address: ") + macToString(mac));
+	logger.log(String("MAC address: ") + mac_to_string(mac));
 }
 
-Network::Network() : m_mode(DISCONNECTED)
+Network::Network(uint8_t pin) : m_mode(DISCONNECTED)
 {
-	Ethernet.init(EK_ETHERNET_COMM_PIN);
+	Ethernet.init(pin);
 }
 
 bool Network::tryConnectUsingDHCP()

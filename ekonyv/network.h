@@ -1,20 +1,14 @@
 #ifndef EKONYV_NETWORK_H
 #define EKONYV_NETWORK_H
 
-#define EK_ETHERNET_COMM_PIN 5
-
-namespace NetworkConstants {
-
-} // namespace NetworkConstants
+#include "logger.h"
 
 class Network {
 private:
-	static String ipToString(const IPAddress &address);
-	static String byteToString(byte b);
-	static String macToString(const byte *mac);
 	static bool checkAndLogHardwareErrors();
 	static void logNetworkInfo();
 
+private:
 	static Logger logger;
 
 private:
@@ -31,7 +25,7 @@ public:
 	static const byte STATIC_IP_ADDRESS[4];
 
 public:
-	Network();
+	Network(uint8_t pin);
 	bool tryConnectUsingDHCP();
 	bool connect();
 	int maintain();
