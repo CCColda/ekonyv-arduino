@@ -14,6 +14,8 @@
     "POST",
     "UPDATE"};
 
+/* private static */ bool HTTPServer::is_overloaded = false;
+
 /* private */ void HTTPServer::parseRequest(const HTTPServer::RequestProps &props, const Vector<HeaderPair> &headers, EthernetClient &client)
 {
 	bool found = false;
@@ -41,6 +43,25 @@
 		logger.error("Invalid request for " + props.path + " from " + ip_to_string(client.remoteIP()));
 		sendStaticHTMLResponse(HTTPResponse::HTML_NOT_FOUND, client);
 	}
+}
+
+/* private static event */ Event HTTPServer::disconnectHandler(DisconnectPromise &data)
+{
+	logger.log("DisconnectHandler attempted");
+
+	logger.log(millis());
+	logger.log(data.terminate_after);
+
+	if (millis() >= data.terminate_after || is_overloaded) {
+		auto client = EthernetClient(data.clientSocket);
+
+		logger.log("Disconnecting from " + ip_to_string(client.remoteIP()));
+		client.stop();
+
+		return Event::REMOVE;
+	}
+
+	return Event::RERUN;
 }
 
 /* private static */ HTTPServer::RequestProps HTTPServer::extractRequestProps(const char *requestLine, size_t len)
@@ -103,8 +124,11 @@ void HTTPServer::start()
 
 void HTTPServer::update()
 {
+	m_serverQueue.execute(4);
+
 	// listen for incoming clients
 	EthernetClient client = m_server.available();
+
 	if (client) {
 		char buffer[512];
 		size_t buffer_saturation = 0;
@@ -171,10 +195,22 @@ void HTTPServer::update()
 			}
 		}
 
-		delay(1);
+		const auto disconnect_at = millis() + 1000;
 
-		logger.log("Disconnecting from " + ip_to_string(client.remoteIP()));
-		client.stop();
+		if (!m_serverQueue.tryEnqueue(DisconnectPromise{
+		                                  client.getSocketNumber(),
+		                                  disconnect_at},
+		                              disconnectHandler)) {
+			logger.warning("Server overloaded");
+
+			is_overloaded = true;
+
+			m_serverQueue.forceEnqueue(
+			    DisconnectPromise{client.getSocketNumber(), disconnect_at},
+			    disconnectHandler);
+
+			is_overloaded = false;
+		}
 	}
 }
 

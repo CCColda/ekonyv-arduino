@@ -6,11 +6,15 @@
 #include "storage.h"
 #include "utility.h"
 
+#include "eventqueue.h"
+
 #include "to_string.h"
 
 auto network = Network(5);
 auto sd = Storage(SDCARD_SS_PIN);
+
 auto server = HTTPServer();
+auto eventqueue = EventQueue<32>();
 
 auto logger = Logger("MAIN");
 
@@ -55,6 +59,7 @@ void setup()
 void loop()
 {
 	network.maintain();
+	eventqueue.execute(5);
 	server.update();
 	delayMicroseconds(500000);
 }

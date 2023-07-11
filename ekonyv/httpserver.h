@@ -4,6 +4,7 @@
 #include <Ethernet.h>
 #include <Vector.h>
 
+#include "eventqueue.h"
 #include "http_response.h"
 #include "logger.h"
 
@@ -12,6 +13,8 @@
 
 class HTTPServer {
 public:
+	using clock_t = decltype(millis());
+
 	enum Header : uint8_t {
 		AUTHORIZATION,
 		ACCEPT,
@@ -55,10 +58,18 @@ public:
 		HTTPRequestHandlerPtr handler;
 	};
 
+	struct DisconnectPromise {
+		uint8_t clientSocket;
+		clock_t terminate_after;
+	};
+
 private:
 	static const char *ACCEPTED_HEADERS[Header::h_size];
 	static const char *ACCEPTED_METHODS[Method::m_size];
 	static Logger logger;
+
+	//! @brief When set to true, disconnect events will ignore the timer
+	static bool is_overloaded;
 
 private:
 	EthernetServer m_server;
@@ -66,9 +77,12 @@ private:
 	Handler m_handlerStorage[8];
 	Vector<Handler> m_handlers;
 
+	EventQueue<8> m_serverQueue;
+
 private:
 	void parseRequest(const RequestProps &props, const Vector<HeaderPair> &headers, EthernetClient &client);
 
+	static Event disconnectHandler(DisconnectPromise &data);
 	static RequestProps extractRequestProps(const char *requestLine, size_t len);
 	static HeaderPair extractHeader(const char *requestLine, size_t len);
 
