@@ -24,7 +24,7 @@ public:
 	};
 
 	struct HandlerBehavior {
-		static const uint8_t RAW = 0x00;
+		static const uint8_t NONE = 0x00;
 		static const uint8_t ALLOW_SUBPATHS = 0x01;
 		static const uint8_t ALLOW_PARAMETERS = 0x02;
 	};
@@ -94,7 +94,8 @@ public:
 	void start();
 	void update();
 
-	static void sendStaticHTMLResponse(const HTTPResponse::StaticHTMLResponse &response, EthernetClient &client);
+	static void writeHTTPHeaders(uint16_t status_code, const char *status_message, const char *content_type, EthernetClient &client);
+	static void writeStaticHTMLResponse(const HTTPResponse::StaticHTMLResponse &response, EthernetClient &client);
 };
 
 #endif // !defined(EKONYV_SERVER_H)

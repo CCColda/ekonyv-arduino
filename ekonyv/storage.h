@@ -20,12 +20,14 @@ public:
 	};
 
 	static String infoToString(const Info &info);
+	static String infoToCSV(const Info &info);
 
 private:
 	static Logger logger;
 
 private:
 	uint8_t m_pin;
+	bool m_connected;
 
 	Sd2Card m_card;
 	SdVolume m_volume;
@@ -38,6 +40,8 @@ public:
 
 	bool init();
 	bool close();
+
+	bool connected() const;
 
 	Info getInfo() const;
 };

@@ -109,3 +109,13 @@ int Network::maintain()
 			break;
 	}
 }
+
+Network::Mode Network::getMode() const
+{
+	return m_mode;
+}
+
+IPAddress Network::getIP() const
+{
+	return Ethernet.localIP();
+}

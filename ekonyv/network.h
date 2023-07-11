@@ -4,6 +4,14 @@
 #include "logger.h"
 
 class Network {
+public:
+	enum Mode : uint8_t {
+		DISCONNECTED,
+		USING_DHCP,
+		USING_STATIC,
+		m_size
+	};
+
 private:
 	static bool checkAndLogHardwareErrors();
 	static void logNetworkInfo();
@@ -12,12 +20,6 @@ private:
 	static Logger logger;
 
 private:
-	enum Mode : byte {
-		DISCONNECTED,
-		USING_DHCP,
-		USING_STATIC
-	};
-
 	Mode m_mode;
 
 public:
@@ -30,6 +32,7 @@ public:
 	bool connect();
 	int maintain();
 
+	Mode getMode() const;
 	IPAddress getIP() const;
 };
 

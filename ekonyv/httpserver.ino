@@ -41,7 +41,7 @@
 
 	if (!found) {
 		logger.error("Invalid request for " + props.path + " from " + ip_to_string(client.remoteIP()));
-		sendStaticHTMLResponse(HTTPResponse::HTML_NOT_FOUND, client);
+		writeStaticHTMLResponse(HTTPResponse::HTML_NOT_FOUND, client);
 	}
 }
 
@@ -151,7 +151,7 @@ void HTTPServer::update()
 					const auto headerEnd = Str::find(buffer, bytes_read, '\n');
 					if (headerEnd == Str::NOT_FOUND) {
 						logger.error("Invalid request from " + ip_to_string(client.remoteIP()) + "; URI is too long");
-						sendStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
+						writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
 						break;
 					}
 
@@ -184,7 +184,7 @@ void HTTPServer::update()
 
 					if (last_newline_in_buffer == 0 || last_newline_in_buffer == Str::NOT_FOUND) {
 						logger.error("Invalid request from " + ip_to_string(client.remoteIP()) + "; line over 512 chars");
-						sendStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
+						writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
 						break;
 					}
 
@@ -213,17 +213,26 @@ void HTTPServer::update()
 		}
 	}
 }
-
-/* static */ void HTTPServer::sendStaticHTMLResponse(const HTTPResponse::StaticHTMLResponse &response, EthernetClient &client)
+/* static */ void HTTPServer::writeHTTPHeaders(uint16_t status_code, const char *status_message, const char *content_type, EthernetClient &client)
 {
 	client.print("HTTP/1.1 ");
-	client.print(response.statusCode);
+	client.print(status_code);
 	client.print(' ');
-	client.println(response.statusMessage);
+	client.println(status_message);
 
-	client.println("Content-Type: text/html; charset=utf-8");
+	client.print("Content-Type: ");
+	client.println(content_type);
+
 	client.println("Connection: close");
 	client.println();
+}
+
+/* static */ void HTTPServer::writeStaticHTMLResponse(const HTTPResponse::StaticHTMLResponse &response, EthernetClient &client)
+{
+	writeHTTPHeaders(
+	    response.statusCode, response.statusMessage,
+	    "text/html; charset=utf-8",
+	    client);
 
 	client.println("<html><body>");
 	client.println("<style>body{display:flex;align-items:center;justify-content:center;gap:1rem;}</style>");

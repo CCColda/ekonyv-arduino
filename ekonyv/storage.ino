@@ -26,8 +26,32 @@
 	       String(", size (gigabytes) = " + String((double)info.size_bytes / (1024.0 * 1024.0 * 1024.0), 2));
 }
 
+/* static */ String Storage::infoToCSV(const Storage::Info &info)
+{
+	const char *type = "<unknown>";
+
+	switch (info.type) {
+		case Info::SD1:
+			type = "SD1";
+			break;
+		case Info::SD2:
+			type = "SD2";
+			break;
+		case Info::SDHC:
+			type = "SDHC";
+			break;
+		default:
+			break;
+	}
+
+	return String("SD_type,") + String(type) +
+	       String("\nSD_size_b,") + String((unsigned long)info.size_bytes, 10) +
+	       String("\nSD_size_mb," + String((double)info.size_bytes / (1024.0 * 1024.0), 2)) +
+	       String("\nSD_size_gb," + String((double)info.size_bytes / (1024.0 * 1024.0 * 1024.0), 2));
+}
+
 Storage::Storage(uint8_t pin)
-    : m_pin(pin), m_card(), m_volume(), root()
+    : m_pin(pin), m_connected(false), m_card(), m_volume(), root()
 {
 }
 
@@ -58,12 +82,20 @@ bool Storage::init()
 		return false;
 	}
 
+	m_connected = true;
+
 	return true;
 }
 
 bool Storage::close()
 {
+	m_connected = false;
 	root.close();
+}
+
+bool Storage::connected() const
+{
+	return m_connected;
 }
 
 Storage::Info Storage::getInfo() const
