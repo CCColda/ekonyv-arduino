@@ -1,6 +1,6 @@
-#include "status.route.h"
+#include "route.status.h"
 
-#include "global.h"
+#include "../global/global.h"
 
 static const char *NETWORK_MODES[Network::Mode::m_size] = {
     "disconnected",
@@ -9,6 +9,7 @@ static const char *NETWORK_MODES[Network::Mode::m_size] = {
 
 int StatusRoute::handler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
 {
+#if EK_ETHERNET
 	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
 
 	client.println("key,value");
@@ -26,6 +27,7 @@ int StatusRoute::handler(const String &path, const Vector<HTTPServer::HeaderPair
 	else {
 		client.println("SD,disconnected");
 	}
+#endif
 }
 
 void StatusRoute::registerRoute(HTTPServer &server)

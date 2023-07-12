@@ -4,9 +4,9 @@
 #include <Ethernet.h>
 #include <Vector.h>
 
-#include "eventqueue.h"
+#include "../arduino/logger.h"
+#include "../eventqueue/eventqueue.h"
 #include "http_response.h"
-#include "logger.h"
 
 #define EK_SERVER_PORT 80
 #define EK_HANDLER_STORAGE 8

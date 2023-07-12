@@ -1,9 +1,14 @@
 #ifndef EKONYV_STORAGE_H
 #define EKONYV_STORAGE_H
 
+#if EK_SD
 #include <SD.h>
+#else
+#include "../storage/mocksd.h"
+#warning "Using mock SD library"
+#endif
 
-#include "logger.h"
+#include "../arduino/logger.h"
 
 class Storage {
 public:
@@ -13,12 +18,14 @@ public:
 			SD1 = SD_CARD_TYPE_SD1,
 			SD2 = SD_CARD_TYPE_SD2,
 			SDHC = SD_CARD_TYPE_SDHC,
+			MOCK = SD_CARD_TYPE_MOCK
 		};
 
 		Type type;
 		uint64_t size_bytes;
 	};
 
+	static const char *typeToString(Info::Type type);
 	static String infoToString(const Info &info);
 	static String infoToCSV(const Info &info);
 

@@ -1,7 +1,7 @@
 #ifndef EKONYV_STATUS_R_H
 #define EKONYV_STATUS_R_H
 
-#include "httpserver.h"
+#include "../network/httpserver.h"
 
 namespace StatusRoute {
 

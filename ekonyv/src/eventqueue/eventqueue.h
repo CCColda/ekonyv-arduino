@@ -1,6 +1,8 @@
 #ifndef EKONYV_EVENTQUEUE_H
 #define EKONYV_EVENTQUEUE_H
 
+#include <Arduino.h>
+
 #include <CircularBuffer.h>
 
 #include <type_traits>

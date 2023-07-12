@@ -1,7 +1,7 @@
 #include "httpserver.h"
 
-#include "string.h"
-#include "to_string.h"
+#include "../string/string.h"
+#include "../string/to_string.h"
 
 /* private static */ Logger HTTPServer::logger = Logger("HTTP");
 
@@ -104,7 +104,7 @@
 
 HTTPServer::HTTPServer() : m_server(EK_SERVER_PORT), m_handlers(), m_handlerStorage{}
 {
-	m_handlers.setStorage<EK_HANDLER_STORAGE>(m_handlerStorage, 0);
+	m_handlers.setStorage<EK_HANDLER_STORAGE>(m_handlerStorage);
 }
 
 void HTTPServer::on(Method method, const char *path, uint8_t behavior, HTTPRequestHandlerPtr handler)
@@ -137,7 +137,7 @@ void HTTPServer::update()
 
 		HeaderPair headerStorage[Header::h_size] = {};
 		auto headers = Vector<HeaderPair>();
-		headers.setStorage<Header::h_size>(headerStorage, 0);
+		headers.setStorage<Header::h_size>(headerStorage);
 
 		logger.log("Incoming connection from " + ip_to_string(client.remoteIP()));
 

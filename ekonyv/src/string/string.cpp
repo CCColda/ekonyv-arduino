@@ -1,10 +1,8 @@
-#ifndef EKONYV_STRING_H
-#define EKONYV_STRING_H
+#include "./string.h"
 
-namespace Str {
 const size_t NOT_FOUND = ~(size_t)0;
 
-const char WHITESPACE[] = "\x20\t\v\n\r";
+const char WHITESPACE[6] = "\x20\t\v\n\r";
 const size_t WHITESPACE_LEN = sizeof(WHITESPACE);
 
 size_t find(const char *str, size_t len, char chr, size_t start = 0)
@@ -76,6 +74,3 @@ size_t compareToMap(const char *str, size_t strlen, const char *map[], size_t ma
 
 	return NOT_FOUND;
 }
-} // namespace Str
-
-#endif // !defined(EKONYV_STRING_H)

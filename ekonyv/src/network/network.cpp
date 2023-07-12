@@ -1,7 +1,7 @@
 #include "network.h"
 
-#include "string.h"
-#include "to_string.h"
+#include "../string/string.h"
+#include "../string/to_string.h"
 
 #include <Ethernet.h>
 
@@ -39,7 +39,11 @@
 
 Network::Network(uint8_t pin) : m_mode(DISCONNECTED)
 {
+#if EK_ETHERNET
 	Ethernet.init(pin);
+#else
+#warning "Ethernet is disabled"
+#endif
 }
 
 bool Network::tryConnectUsingDHCP()

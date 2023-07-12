@@ -1,13 +1,14 @@
 #ifndef EKONYV_HELLO_R_H
 #define EKONYV_HELLO_R_H
 
-#include "httpserver.h"
-#include "to_string.h"
+#include "../network/httpserver.h"
+#include "../string/to_string.h"
 
 namespace HelloRoute {
 
 int handler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
 {
+#if EK_ETHERNET
 	const String body = "Végre működik a HTTP... <code>" + string_to_html_escaped_string(path) + "</code>";
 	HTTPServer::writeStaticHTMLResponse(
 	    HTTPResponse::StaticHTMLResponse{
@@ -16,6 +17,7 @@ int handler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, E
 	        "Szia!",
 	        body.c_str()},
 	    client);
+#endif
 }
 
 void registerRoute(HTTPServer &server)

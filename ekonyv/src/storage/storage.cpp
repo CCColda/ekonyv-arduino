@@ -2,25 +2,26 @@
 
 /* private static */ Logger Storage::logger = Logger("SDCR");
 
+/* static */ const char *Storage::typeToString(Info::Type type)
+{
+	switch (type) {
+		case Info::SD1:
+			return "SD1";
+		case Info::SD2:
+			return "SD2";
+		case Info::SDHC:
+			return "SDHC";
+		case Info::MOCK:
+			return "MOCK";
+		default:
+			return "<unknown>";
+	}
+}
+
 /* static */ String Storage::infoToString(const Storage::Info &info)
 {
-	const char *type = "<unknown>";
 
-	switch (info.type) {
-		case Info::SD1:
-			type = "SD1";
-			break;
-		case Info::SD2:
-			type = "SD2";
-			break;
-		case Info::SDHC:
-			type = "SDHC";
-			break;
-		default:
-			break;
-	}
-
-	return String("type = ") + String(type) +
+	return String("type = ") + String(typeToString(info.type)) +
 	       String(", size (bytes) = ") + String((unsigned long)info.size_bytes, 10) +
 	       String(", size (megabytes) = " + String((double)info.size_bytes / (1024.0 * 1024.0), 2)) +
 	       String(", size (gigabytes) = " + String((double)info.size_bytes / (1024.0 * 1024.0 * 1024.0), 2));
@@ -28,40 +29,20 @@
 
 /* static */ String Storage::infoToCSV(const Storage::Info &info)
 {
-	const char *type = "<unknown>";
-
-	switch (info.type) {
-		case Info::SD1:
-			type = "SD1";
-			break;
-		case Info::SD2:
-			type = "SD2";
-			break;
-		case Info::SDHC:
-			type = "SDHC";
-			break;
-		default:
-			break;
-	}
-
-	return String("SD_type,") + String(type) +
+	return String("SD_type,") + String(typeToString(info.type)) +
 	       String("\nSD_size_b,") + String((unsigned long)info.size_bytes, 10) +
 	       String("\nSD_size_mb," + String((double)info.size_bytes / (1024.0 * 1024.0), 2)) +
 	       String("\nSD_size_gb," + String((double)info.size_bytes / (1024.0 * 1024.0 * 1024.0), 2));
 }
 
 Storage::Storage(uint8_t pin)
-    : m_pin(pin), m_connected(false), m_card(), m_volume(), root()
+    : m_card(), m_volume(), root(),
+      m_pin(pin), m_connected(false)
 {
 }
 
 bool Storage::init()
 {
-	if (!Serial) {
-		logger.error("Failed initializing SD card: Serial is not initialized.");
-		return false;
-	}
-
 	if (!m_card.init(SPI_QUARTER_SPEED, m_pin)) {
 		logger.error("Failed initializing SD card; card not found. Make sure to insert it in the MKRZero slot instead of the ETH shield.");
 		return false;

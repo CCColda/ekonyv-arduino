@@ -1,7 +1,7 @@
 #ifndef EKONYV_NETWORK_H
 #define EKONYV_NETWORK_H
 
-#include "logger.h"
+#include "../arduino/logger.h"
 
 class Network {
 public:

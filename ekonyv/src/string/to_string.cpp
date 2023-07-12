@@ -1,7 +1,4 @@
-#ifndef EKONYV_TO_STRING_H
-#define EKONYV_TO_STRING_H
-
-#include <type_traits>
+#include "to_string.h"
 
 String ip_to_string(const IPAddress &address)
 {
@@ -69,5 +66,3 @@ String string_to_html_escaped_string(const String &str)
 
 	return result;
 }
-
-#endif // !defined(EKONYV_TO_STRING_H)
