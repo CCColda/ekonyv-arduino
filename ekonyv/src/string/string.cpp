@@ -1,17 +1,44 @@
 #include "./string.h"
 
+namespace Str {
+
 const size_t NOT_FOUND = ~(size_t)0;
 
 const char WHITESPACE[6] = "\x20\t\v\n\r";
 const size_t WHITESPACE_LEN = sizeof(WHITESPACE);
 
-size_t find(const char *str, size_t len, char chr, size_t start = 0)
+size_t find(const char *str, size_t len, char chr, size_t start)
 {
 	if (start >= len)
 		return NOT_FOUND;
 
 	for (size_t i = start; i < len; ++i) {
 		if (str[i] == chr)
+			return i;
+	}
+
+	return NOT_FOUND;
+}
+
+size_t findString(const char *str, size_t len, const char *search, size_t search_len, size_t start)
+{
+	if (search_len > len)
+		return NOT_FOUND;
+
+	if (start + search_len >= len)
+		return NOT_FOUND;
+
+	for (size_t i = start; i < len - search_len; ++i) {
+		bool found = true;
+
+		for (size_t j = 0; j < search_len; ++j) {
+			if (search[j] != str[i + j]) {
+				found = false;
+				break;
+			}
+		}
+
+		if (found)
 			return i;
 	}
 
@@ -31,7 +58,7 @@ size_t findLast(const char *str, size_t len, char chr)
 	return NOT_FOUND;
 }
 
-size_t findFirstNotOf(const char *str, size_t len, const char *charset, size_t charsetlen, size_t start = 0)
+size_t findFirstNotOf(const char *str, size_t len, const char *charset, size_t charsetlen, size_t start)
 {
 	if (start >= len)
 		return NOT_FOUND;
@@ -74,3 +101,5 @@ size_t compareToMap(const char *str, size_t strlen, const char *map[], size_t ma
 
 	return NOT_FOUND;
 }
+
+} // namespace Str

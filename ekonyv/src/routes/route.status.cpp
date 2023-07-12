@@ -2,6 +2,8 @@
 
 #include "../global/global.h"
 
+#include "../string/to_string.h"
+
 static const char *NETWORK_MODES[Network::Mode::m_size] = {
     "disconnected",
     "dhcp",
@@ -13,6 +15,8 @@ int StatusRoute::handler(const String &path, const Vector<HTTPServer::HeaderPair
 	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
 
 	client.println("key,value");
+	client.println("NAME," EK_NAME);
+	client.println("VERSION," EK_VERSION);
 	client.print("IP,");
 	client.println(ip_to_string(global::network.getIP()));
 	client.print("MAC,");

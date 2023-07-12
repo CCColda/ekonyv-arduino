@@ -6,11 +6,10 @@
 #include "src/arduino/utility.h"
 
 #include "src/routes/route.hello.h"
+#include "src/routes/route.register.h"
 #include "src/routes/route.status.h"
 
 #include "src/global/global.h"
-
-#include "test/database.test.h"
 
 auto logger = Logger("MAIN");
 
@@ -37,10 +36,6 @@ void setup()
 		logger.log(String("SD Card connected; ") + Storage::infoToString(global::sd.getInfo()));
 	}
 
-	if (SD.exists("test.txt")) {
-		SD.remove("test.txt");
-	}
-
 #if EK_ETHERNET
 	if (!global::network.tryConnectUsingDHCP()) {
 		logger.warning("DHCP setup failed; falling back to static IP");
@@ -52,8 +47,16 @@ void setup()
 
 	global::server.start();
 
+	global::db.reg_req.load();
+	global::db.user.load();
+
 	HelloRoute::registerRoute(global::server);
 	StatusRoute::registerRoute(global::server);
+	RegisterRoute::registerRoute(global::server);
+
+	/* auto init = global::db.reg_req.tryInitiate({{192, 168, 0, 101}});
+	Serial.write((char *)init.req.code.data, 4);
+	Serial.println(); */
 #endif
 }
 

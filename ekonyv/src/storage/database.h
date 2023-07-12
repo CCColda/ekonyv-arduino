@@ -72,7 +72,7 @@ public:
 	}
 
 	Database(Database &&other)
-	    : m_updateCache(), m_file(other.m_file), m_file_num_records(other.m_file_num_records), m_num_records(other.m_num_records)
+	    : m_updateCache(), m_file(static_cast<BlockFile<sizeof(Record)> &&>(other.m_file)), m_file_num_records(other.m_file_num_records), m_num_records(other.m_num_records)
 	{
 		while (!other.m_updateCache.isEmpty())
 			m_updateCache.push(other.m_updateCache.shift());
@@ -227,15 +227,15 @@ public:
 
 		m_file.open();
 
-		for (uint32_t i = reversed ? 0 : start - 1;
+		for (uint32_t i = reversed ? start - 1 : 0;
 		     reversed ? i >= 0 : i < m_num_records;
 		     reversed ? --i : ++i) {
 
-			const auto result = Record();
-			m_file.readNth(i, &result, sizeof(result));
+			auto record = Record();
+			m_file.readNth(i, &record, sizeof(record));
 
-			if (searchFn(i, result, searchArgs...)) {
-				result = QueryResult{QueryState::SUCCESS, i, result};
+			if (searchFn(i, record, searchArgs...)) {
+				result = QueryResult{QueryState::SUCCESS, i, record};
 				break;
 			}
 		}

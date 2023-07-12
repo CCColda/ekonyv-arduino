@@ -47,15 +47,12 @@
 
 /* private static event */ Event HTTPServer::disconnectHandler(DisconnectPromise &data)
 {
-	logger.log("DisconnectHandler attempted");
-
-	logger.log(millis());
-	logger.log(data.terminate_after);
+	logger.log("DisconnectHandler attempted at time ", millis(), " / ", data.terminate_after);
 
 	if (millis() >= data.terminate_after || is_overloaded) {
 		auto client = EthernetClient(data.clientSocket);
 
-		logger.log("Disconnecting from " + ip_to_string(client.remoteIP()));
+		logger.log("Disconnecting from ", ip_to_string(client.remoteIP()));
 		client.stop();
 
 		return Event::REMOVE;
@@ -139,7 +136,7 @@ void HTTPServer::update()
 		auto headers = Vector<HeaderPair>();
 		headers.setStorage<Header::h_size>(headerStorage);
 
-		logger.log("Incoming connection from " + ip_to_string(client.remoteIP()));
+		logger.log("Incoming connection from ", ip_to_string(client.remoteIP()));
 
 		while (client.connected()) {
 			if (client.available()) {
@@ -150,7 +147,7 @@ void HTTPServer::update()
 
 					const auto headerEnd = Str::find(buffer, bytes_read, '\n');
 					if (headerEnd == Str::NOT_FOUND) {
-						logger.error("Invalid request from " + ip_to_string(client.remoteIP()) + "; URI is too long");
+						logger.error("Invalid request from ", ip_to_string(client.remoteIP()), "; URI is too long");
 						writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
 						break;
 					}
@@ -183,7 +180,7 @@ void HTTPServer::update()
 					const auto last_newline_in_buffer = Str::findLast(buffer, bytes_read, '\n');
 
 					if (last_newline_in_buffer == 0 || last_newline_in_buffer == Str::NOT_FOUND) {
-						logger.error("Invalid request from " + ip_to_string(client.remoteIP()) + "; line over 512 chars");
+						logger.error("Invalid request from ", ip_to_string(client.remoteIP()), "; line over 512 chars");
 						writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
 						break;
 					}

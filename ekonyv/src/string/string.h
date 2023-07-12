@@ -11,6 +11,7 @@ extern const char WHITESPACE[6];
 extern const size_t WHITESPACE_LEN;
 
 size_t find(const char *str, size_t len, char chr, size_t start = 0);
+size_t findString(const char *str, size_t len, const char *search, size_t search_len, size_t start = 0);
 size_t findLast(const char *str, size_t len, char chr);
 size_t findFirstNotOf(const char *str, size_t len, const char *charset, size_t charsetlen, size_t start = 0);
 String fromBuffer(const char *buf, size_t begin, size_t end);

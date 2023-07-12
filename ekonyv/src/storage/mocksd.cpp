@@ -171,11 +171,7 @@ MockFileReference MockSD::open(const char *path, uint8_t write_mode)
 	auto new_file = MockFile(path);
 	m_files.push_back(new_file);
 
-	Serial.print("Opening file ");
-	Serial.println(path);
-
-	Serial.print("Size: ");
-	Serial.println(m_files[m_files.size() - 1].size());
+	VERBOSE_LOG(mockLogger, "Fulfilling file open at \"", path, "\", size: ", m_files[m_files.size() - 1].size());
 
 	return m_files[m_files.size() - 1];
 }

@@ -8,7 +8,15 @@
 #include "../network/network.h"
 #include "../storage/storage.h"
 
+#include "../database/registrationrequest.db.h"
+#include "../database/user.db.h"
+
 namespace global {
+struct Databases {
+	RegistrationRequestDatabase reg_req;
+	UserDatabase user;
+};
+
 #if EK_ETHERNET
 extern Network network;
 extern HTTPServer server;
@@ -17,6 +25,7 @@ extern HTTPServer server;
 #endif
 
 extern Storage sd;
+extern Databases db;
 extern EventQueue<32> eventqueue;
 } // namespace global
 
