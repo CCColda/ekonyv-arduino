@@ -5,6 +5,12 @@
 
 #include <Arduino.h>
 
+#if EK_ETHERNET
+#define EK_REGREQ_GET_TIME global::ntp.getEpochTime
+#else
+#define EK_REGREQ_GET_TIME millis
+#endif
+
 namespace {
 const char VALID_CODE_LETTERS[] = {
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
@@ -70,7 +76,7 @@ void RegistrationRequestDatabase::save()
 
 uint32_t RegistrationRequestDatabase::cleanExpired(uint32_t n)
 {
-	const unsigned long time = global::ntp.getEpochTime();
+	const unsigned long time = EK_REGREQ_GET_TIME();
 
 	uint32_t invalid_count = 0;
 
@@ -112,7 +118,7 @@ RegistrationInitiation RegistrationRequestDatabase::tryInitiate(FixedBuffer<4> i
 		request.code.data[i] = getRandomLetter();
 
 	request.ip = ip;
-	request.expireMillis = global::ntp.getEpochTime() + EK_REGISTRATIONREQUEST_TIMEOUT_MS;
+	request.expireMillis = EK_REGREQ_GET_TIME() + EK_REGISTRATIONREQUEST_TIMEOUT_MS;
 
 	db.append(request);
 
@@ -121,7 +127,7 @@ RegistrationInitiation RegistrationRequestDatabase::tryInitiate(FixedBuffer<4> i
 
 bool RegistrationRequestDatabase::checkCode(FixedBuffer<4> ip, FixedBuffer<4> code)
 {
-	const auto time = global::ntp.getEpochTime();
+	const auto time = EK_REGREQ_GET_TIME();
 
 	const auto searchResult = db.search(
 	    0, false,

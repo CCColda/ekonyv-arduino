@@ -6,3 +6,5 @@ out
 !.vscode/libraries.txt
 
 local/*
+
+ekonyv/src/salt.h

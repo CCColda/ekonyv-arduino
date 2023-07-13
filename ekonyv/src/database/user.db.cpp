@@ -36,7 +36,7 @@ void UserDatabase::save()
 
 bool UserDatabase::tryRegister(
     const char *username, size_t len,
-    const FixedBuffer<256> &passwordHash,
+    const FixedBuffer<32> &passwordHash,
     User::Flags flags)
 {
 	const auto searchResult = db.search(

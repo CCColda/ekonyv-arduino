@@ -1,4 +1,5 @@
-﻿CircularBuffer@1.3.3
+CircularBuffer@1.3.3
+Crypto@0.4.0
 Ethernet@2.0.2
 NTPClient@3.2.1
 SD@1.2.4

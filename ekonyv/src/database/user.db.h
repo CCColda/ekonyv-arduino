@@ -12,8 +12,7 @@ struct User {
 
 	uint16_t id;
 	char username[64];
-	// todo: implement password hashing
-	FixedBuffer<256> password_hash;
+	FixedBuffer<32> password_hash;
 	Flags flags;
 };
 
@@ -35,7 +34,7 @@ public:
 
 	bool tryRegister(
 	    const char *username, size_t len,
-	    const FixedBuffer<256> &passwordHash,
+	    const FixedBuffer<32> &passwordHash,
 	    User::Flags flags);
 };
 

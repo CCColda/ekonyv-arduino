@@ -1,6 +1,14 @@
 #ifndef EKONYV_CONFIG_H
 #define EKONYV_CONFIG_H
 
+#include "salt.h"
+
+#ifndef EK_PASSWORD_SALT
+#define EK_PASSWORD_SALT ""
+#define EK_PASSWORD_SALT_LEN 0
+#warning "Password salt was not defined, using empty string. Make sure to create salt.h."
+#endif
+
 #pragma region helper macros
 
 #define __EK_LITERAL_STRING(s) #s

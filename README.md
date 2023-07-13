@@ -20,7 +20,7 @@ adatokat és ISBN kódokat kérdez le; egy Android alkalmazás backend-je.
   - [x] Fájlkezelés
 - [x] Regisztráció négyjegyű kóddal
 - [x] Idő lekérdezése NTP szerverről
-- [ ] Felhasználók jelszavainak SHA-256 titkosítása
+- [x] Felhasználók jelszavainak SHA-256 titkosítása
 - [ ] Bejelentkezés session token-ért
 - [ ] ISBN-lekérdezés API végpont
   - [ ] Csak felhasználókra szűkítve
