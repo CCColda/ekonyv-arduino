@@ -1,4 +1,8 @@
 out
 
 .vscode/*
+!.vscode/scripts
 !.vscode/arduino.json
+!.vscode/libraries.txt
+
+local/*

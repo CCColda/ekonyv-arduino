@@ -4,12 +4,11 @@
 #include <Ethernet.h>
 #include <Vector.h>
 
+#include "../config.h"
+
 #include "../arduino/logger.h"
 #include "../eventqueue/eventqueue.h"
 #include "http_response.h"
-
-#define EK_SERVER_PORT 80
-#define EK_HANDLER_STORAGE 8
 
 class HTTPServer {
 public:
@@ -74,10 +73,10 @@ private:
 private:
 	EthernetServer m_server;
 
-	Handler m_handlerStorage[8];
+	Handler m_handlerStorage[EK_HTTP_HANDLER_STORAGE];
 	Vector<Handler> m_handlers;
 
-	EventQueue<8> m_serverQueue;
+	EventQueue<1> m_serverQueue;
 
 private:
 	void parseRequest(const RequestProps &props, const Vector<HeaderPair> &headers, EthernetClient &client);

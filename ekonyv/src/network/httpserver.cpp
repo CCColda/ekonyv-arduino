@@ -101,7 +101,7 @@
 
 HTTPServer::HTTPServer() : m_server(EK_SERVER_PORT), m_handlers(), m_handlerStorage{}
 {
-	m_handlers.setStorage<EK_HANDLER_STORAGE>(m_handlerStorage);
+	m_handlers.setStorage<EK_HTTP_HANDLER_STORAGE>(m_handlerStorage);
 }
 
 void HTTPServer::on(Method method, const char *path, uint8_t behavior, HTTPRequestHandlerPtr handler)
@@ -121,7 +121,7 @@ void HTTPServer::start()
 
 void HTTPServer::update()
 {
-	m_serverQueue.execute(4);
+	m_serverQueue.execute(1);
 
 	// listen for incoming clients
 	EthernetClient client = m_server.available();

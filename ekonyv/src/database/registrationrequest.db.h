@@ -41,8 +41,7 @@ public:
 	void load();
 	void save();
 
-	// todo implement
-	void cleanExpired();
+	uint32_t cleanExpired(uint32_t n);
 
 	RegistrationInitiation tryInitiate(FixedBuffer<4> ip);
 

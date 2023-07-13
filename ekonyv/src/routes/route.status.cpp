@@ -23,6 +23,12 @@ int StatusRoute::handler(const String &path, const Vector<HTTPServer::HeaderPair
 	client.println(mac_to_string(Network::MAC_ADDRESS));
 	client.print("DHCP,");
 	client.println(NETWORK_MODES[global::network.getMode()]);
+	client.print("TIME_STRING,");
+	client.println(global::ntp.getFormattedTime());
+	client.print("TIME_SINCE_EPOCH,");
+	client.println(global::ntp.getEpochTime());
+	client.print("TIME_SINCE_DEVICE_EPOCH,");
+	client.println(millis());
 
 	if (global::sd.connected()) {
 		client.println("SD,connected");

@@ -3,6 +3,8 @@
 
 #include "../config.h"
 
+#include <NTPClient.h>
+
 #include "../eventqueue/eventqueue.h"
 #include "../network/httpserver.h"
 #include "../network/network.h"
@@ -20,6 +22,7 @@ struct Databases {
 #if EK_ETHERNET
 extern Network network;
 extern HTTPServer server;
+extern NTPClient ntp;
 #else
 #warning "Ethernet is disabled"
 #endif

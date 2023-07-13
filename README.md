@@ -19,7 +19,7 @@ adatokat és ISBN kódokat kérdez le; egy Android alkalmazás backend-je.
 - [x] Adatok veszteségmentes _?_ tárolása az SD-kártyán
   - [x] Fájlkezelés
 - [x] Regisztráció négyjegyű kóddal
-- [ ] Idő lekérdezése NTP szerverről
+- [x] Idő lekérdezése NTP szerverről
 - [ ] Felhasználók jelszavainak SHA-256 titkosítása
 - [ ] Bejelentkezés session token-ért
 - [ ] ISBN-lekérdezés API végpont

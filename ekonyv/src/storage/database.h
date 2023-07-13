@@ -21,6 +21,8 @@ private:
 	static Logger logger;
 
 public:
+	static constexpr size_t CACHE_SIZE = CacheSize;
+
 	template <typename... Args>
 	using SearchFnPtr = bool (*)(uint32_t, const Record &, Args...);
 
@@ -246,12 +248,14 @@ public:
 	}
 
 	template <typename... IterArgs>
-	bool iterate(bool unlockFile, uint32_t start, uint32_t end, IterationFnPtr<IterArgs...> iterFn, IterArgs... iterArgs)
+	bool iterate(bool unlockFile, uint32_t start, uint32_t end, bool reversed, IterationFnPtr<IterArgs...> iterFn, IterArgs... iterArgs)
 	{
 		if (!trySave())
 			return false;
 
-		for (uint32_t i = start; i < end; ++i) {
+		for (uint32_t i = reversed ? end - 1 : start;
+		     reversed ? i >= start : i < end;
+		     reversed ? --i : ++i) {
 			if (!m_file.is_open())
 				m_file.open();
 

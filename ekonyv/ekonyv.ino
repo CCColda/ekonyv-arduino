@@ -49,6 +49,14 @@ void setup()
 
 	global::db.reg_req.load();
 	global::db.user.load();
+	global::ntp.begin();
+
+	if (!global::ntp.forceUpdate()) {
+		logger.warning("NTP update failed");
+	}
+	else {
+		logger.log("Time is: ", global::ntp.getFormattedTime(), " (from server " EK_NTP_IP " with " __EK_MACRO_STRING(EK_NTP_OFFSET_S) "s offset; no correction for DST)");
+	}
 
 	HelloRoute::registerRoute(global::server);
 	StatusRoute::registerRoute(global::server);
@@ -64,6 +72,7 @@ void loop()
 {
 #if EK_ETHERNET
 	global::network.maintain();
+	global::ntp.update();
 	global::server.update();
 #endif
 
