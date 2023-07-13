@@ -41,8 +41,10 @@
 #define EK_NTP_OFFSET_S 3600
 
 #define EK_REGISTRATIONREQUEST_TIMEOUT_MS 600000
-#define EK_REGISTRATIONREQUESTDB_PATH "ekonyv/db/regreq.txt"
+#define EK_SESSION_TIMEOUT_MS 1800000
+
 #define EK_USERDB_PATH "ekonyv/db/user.txt"
+#define EK_SESSIONDB_PATH "ekonyv/db/session.txt"
 
 //! @warning Do not change
 #define EK_MOCK_FILE_SIZE EK_MOCK_FILE_BLOCKS * 512

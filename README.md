@@ -21,7 +21,8 @@ adatokat és ISBN kódokat kérdez le; egy Android alkalmazás backend-je.
 - [x] Regisztráció négyjegyű kóddal
 - [x] Idő lekérdezése NTP szerverről
 - [x] Felhasználók jelszavainak SHA-256 titkosítása
-- [ ] Bejelentkezés session token-ért
+- [x] Bejelentkezés session token-ért
+- [ ] Session token ellenőrzése védett API végpontokon
 - [ ] ISBN-lekérdezés API végpont
   - [ ] Csak felhasználókra szűkítve
   - [ ] Lekérdezés (3-4 HTTP GET)

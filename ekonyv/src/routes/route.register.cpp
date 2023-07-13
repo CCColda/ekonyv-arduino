@@ -4,7 +4,7 @@
 
 #include "../string/url.h"
 
-#include <SHA256.h>
+#include "../string/hash.h"
 
 int RegisterRoute::requestCodeHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
 {
@@ -21,18 +21,18 @@ int RegisterRoute::requestCodeHandler(const String &path, const Vector<HTTPServe
 	client.println("key,value");
 	client.print("state,");
 
-	if (initiation.success) {
+	if (initiation) {
 		client.println("success");
 
 #if !EK_PRODUCTION
 		// todo Display on LCD
 		client.print("code,");
-		client.write(initiation.req.code.data, 4);
+		client.write(global::db.reg_req.code.data, 4);
 		client.println();
 #endif
 
 		client.print("expire,");
-		client.println(initiation.req.expireMillis);
+		client.println(global::db.reg_req.expire);
 	}
 	else {
 		client.println("failure");
@@ -71,24 +71,13 @@ int RegisterRoute::registerHandler(const String &path, const Vector<HTTPServer::
 	client.print("state,");
 
 	if (code_valid) {
-		const auto password_length = password_param.length();
-
-		byte *salted_password_buffer = new byte[password_length + EK_PASSWORD_SALT_LEN];
-		memcpy(salted_password_buffer, password_param.c_str(), password_length);
-		memcpy(salted_password_buffer + password_length, EK_PASSWORD_SALT, EK_PASSWORD_SALT_LEN);
-
-		FixedBuffer<32> password_hash;
-
-		SHA256 password_hasher;
-		password_hasher.update(salted_password_buffer, password_length + EK_PASSWORD_SALT_LEN);
-		password_hasher.finalize(password_hash.data, 32);
-
-		delete[] salted_password_buffer;
-
+		const auto password_hash = Str::hashAndSaltString(password_param);
 		const auto reg_success = global::db.user.tryRegister(username_param.c_str(), username_param.length(), password_hash, User::Flags{1, 1});
 
 		if (reg_success) {
 			client.println("success");
+
+			global::db.reg_req.invalidate();
 		}
 		else {
 			client.println("failure");

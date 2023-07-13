@@ -3,12 +3,21 @@
 #include "../config.h"
 #include "../string/string.h"
 
-/* private static */ bool UserDatabase::matchUsername(
+namespace {
+bool matchUsernamePassword(
+    uint32_t i, const User &user,
+    const char *username, size_t len, FixedBuffer<32> passwordHash)
+{
+	return Str::compare(user.username, username, len) && passwordHash == user.password_hash;
+}
+
+bool matchUsername(
     uint32_t i, const User &user,
     const char *username, size_t len)
 {
 	return Str::compare(user.username, username, len);
 }
+} // namespace
 
 /* private */ uint16_t UserDatabase::findNextID()
 {
@@ -42,7 +51,7 @@ bool UserDatabase::tryRegister(
 	const auto searchResult = db.search(
 	    0, false,
 	    matchUsername,
-	    username, min(len, sizeof(User::username)));
+	    username, len);
 
 	if (searchResult.state == QueryState::SUCCESS) {
 		return false;
@@ -53,7 +62,7 @@ bool UserDatabase::tryRegister(
 	user.flags = flags;
 
 	memcpy(user.password_hash.data, passwordHash.data, sizeof(User::password_hash));
-	memcpy(user.username, username, min(len, sizeof(User::username)));
+	memcpy(user.username, username, len);
 	if (len < sizeof(User::username)) {
 		user.username[len] = '\0';
 	}
@@ -61,4 +70,19 @@ bool UserDatabase::tryRegister(
 	db.append(user);
 
 	return true;
+}
+
+UserDatabase::LoginResult UserDatabase::tryLogin(
+    const char *username, size_t len,
+    const FixedBuffer<32> &passwordHash)
+{
+	const auto searchResult = db.search(
+	    0, false,
+	    matchUsernamePassword,
+	    username, len, passwordHash);
+
+	if (searchResult.state == QueryState::SUCCESS)
+		return LoginResult{false, User()};
+
+	return LoginResult{true, searchResult.value};
 }

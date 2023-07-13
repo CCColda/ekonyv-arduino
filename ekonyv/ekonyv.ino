@@ -6,8 +6,10 @@
 #include "src/arduino/utility.h"
 
 #include "src/routes/route.hello.h"
+#include "src/routes/route.login.h"
 #include "src/routes/route.register.h"
 #include "src/routes/route.status.h"
+#include "src/routes/route.user.hello.h"
 
 #include "src/global/global.h"
 
@@ -24,6 +26,8 @@ auto logger = Logger("MAIN");
 
 void setup()
 {
+	pinMode(EK_HANGING_ANALOG_PIN, INPUT);
+
 	Serial.begin(9600);
 	while (!Serial)
 		delay(5);
@@ -56,8 +60,8 @@ void setup()
 
 	global::server.start();
 
-	global::db.reg_req.load();
 	global::db.user.load();
+	global::db.session.load();
 	global::ntp.begin();
 
 	if (!global::ntp.forceUpdate()) {
@@ -70,6 +74,8 @@ void setup()
 	HelloRoute::registerRoute(global::server);
 	StatusRoute::registerRoute(global::server);
 	RegisterRoute::registerRoute(global::server);
+	LoginRoute::registerRoute(global::server);
+	UserHelloRoute::registerRoute(global::server);
 
 	/* auto init = global::db.reg_req.tryInitiate({{192, 168, 0, 101}});
 	Serial.write((char *)init.req.code.data, 4);
@@ -83,6 +89,9 @@ void loop()
 	global::network.maintain();
 	global::ntp.update();
 	global::server.update();
+
+	// todo use timeout
+	global::db.reg_req.update();
 #endif
 
 	global::eventqueue.execute(5);

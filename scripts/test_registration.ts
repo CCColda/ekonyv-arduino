@@ -39,6 +39,24 @@ async function requestRegistration(ip: string, code: string): Promise<boolean> {
 	return (state ?? "") == "success";
 }
 
+async function requestSession(ip: string): Promise<boolean> {
+	const resp = await fetch(`http://${ip}:80/api/user/login?username=TestRegistration&password=no`, { method: 'POST' });
+
+	if (resp.status != 200)
+		return false;
+
+	const response_text = await resp.text();
+
+	const csv_data = parse(response_text, { fieldsPerRecord: 2 });
+
+	console.log(response_text);
+	console.log(csv_data);
+
+	const state = csv_data.find(([k, v]) => k == "state")?.[1];
+
+	return (state ?? "") == "success";
+}
+
 if (import.meta.main) {
 	const args = flags.parse(Deno.args);
 	const ip = args["ip"] ?? null;
@@ -54,6 +72,7 @@ if (import.meta.main) {
 		if (reqcode) {
 			if (await requestRegistration(ip, reqcode)) {
 				console.log("Success");
+				await requestSession(ip);
 			}
 			else {
 				console.log("Failed registration");

@@ -21,6 +21,12 @@ const StaticHTMLResponse HTML_NOT_FOUND = {
     "Not Found",
     "404 - Not Found",
     "The resource you requested does not seem to exist."};
+
+const StaticHTMLResponse HTML_UNAUTHORIZED = {
+    401,
+    "Unauthorized",
+    "401 - Unauthorized",
+    "Invalid credentials."};
 } // namespace HTTPResponse
 
 #endif // !defined(EKONYV_HTTP_RESPONSE_H)

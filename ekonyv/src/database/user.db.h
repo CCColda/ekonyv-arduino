@@ -20,12 +20,14 @@ class UserDatabase {
 public:
 	Database<User, 4> db;
 
-private:
-	static bool matchUsername(
-	    uint32_t i, const User &user,
-	    const char *username, size_t len);
+	struct LoginResult {
+		bool success;
+		User user;
+	};
 
-	uint16_t findNextID();
+private:
+	uint16_t
+	findNextID();
 
 public:
 	UserDatabase();
@@ -36,6 +38,10 @@ public:
 	    const char *username, size_t len,
 	    const FixedBuffer<32> &passwordHash,
 	    User::Flags flags);
+
+	LoginResult tryLogin(
+	    const char *username, size_t len,
+	    const FixedBuffer<32> &passwordHash);
 };
 
 #endif // !defined(EKONYV_USER_DB_H)

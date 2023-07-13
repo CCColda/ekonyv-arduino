@@ -130,7 +130,7 @@ void MockFileReference::close()
 MockFileReference::operator bool()
 {
 	if (m_file)
-		return (*m_file);
+		return (bool)(*m_file);
 	else
 		return false;
 }
@@ -170,6 +170,7 @@ MockFileReference MockSD::open(const char *path, uint8_t write_mode)
 
 	auto new_file = MockFile(path);
 	m_files.push_back(new_file);
+	m_open_file = path;
 
 	VERBOSE_LOG(mockLogger, "Fulfilling file open at \"", path, "\", size: ", m_files[m_files.size() - 1].size());
 

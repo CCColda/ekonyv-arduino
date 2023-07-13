@@ -10,13 +10,15 @@
 #include "../network/network.h"
 #include "../storage/storage.h"
 
-#include "../database/registrationrequest.db.h"
+#include "../database/registrationrequest.mem.h"
+#include "../database/session.db.h"
 #include "../database/user.db.h"
 
 namespace global {
 struct Databases {
-	RegistrationRequestDatabase reg_req;
+	RegistrationRequest reg_req;
 	UserDatabase user;
+	SessionDatabase session;
 };
 
 #if EK_ETHERNET
