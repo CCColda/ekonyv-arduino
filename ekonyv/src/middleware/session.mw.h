@@ -9,7 +9,8 @@ public:
 	SessionMiddleware(const String &path, bool get_user);
 
 	bool valid;
-	Session session;
+	bool expired;
+	uint16_t user_id;
 	User user;
 };
 

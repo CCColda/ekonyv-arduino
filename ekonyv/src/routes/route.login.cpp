@@ -19,7 +19,11 @@ int LoginRoute::loginHandler(const String &path, const Vector<HTTPServer::Header
 		return 0;
 	}
 
-	const auto password_hash = Str::hashAndSaltString(password_param);
+	FixedBuffer<32> password_hash;
+	Str::hashAndSaltString(password_param, password_hash);
+
+	Serial.println("Login hash");
+	Serial.println(fixed_buffer_to_string(password_hash));
 
 	const auto loginResult = global::db.user.tryLogin(username_param.c_str(), username_param.length(), password_hash);
 

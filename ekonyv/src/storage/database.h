@@ -229,7 +229,7 @@ public:
 
 		m_file.open();
 
-		for (uint32_t i = reversed ? start - 1 : 0;
+		for (uint32_t i = reversed ? m_num_records - start - 1 : 0;
 		     reversed ? i >= 0 : i < m_num_records;
 		     reversed ? --i : ++i) {
 
@@ -272,6 +272,33 @@ public:
 			m_file.close();
 
 		return true;
+	}
+
+	template <typename... SearchArgs>
+	uint32_t remove_if(uint32_t start, uint32_t end, SearchFnPtr<SearchArgs...> searchFn, SearchArgs... searchArgs)
+	{
+		if (!trySave())
+			return 0;
+
+		uint32_t result = 0;
+
+		m_file.open();
+
+		for (uint32_t i = start - 1; i >= 0; --i) {
+			auto record = Record();
+			m_file.readNth(i, &record, sizeof(record));
+
+			if (searchFn(i, record, searchArgs...)) {
+				++result;
+				--m_num_records;
+
+				m_file.erase(i);
+			}
+		}
+
+		m_file.close();
+
+		return result;
 	}
 };
 

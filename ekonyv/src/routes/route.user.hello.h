@@ -4,24 +4,38 @@
 #include "../network/httpserver.h"
 #include "../string/to_string.h"
 
+#include "../middleware/session.mw.h"
+
 namespace UserHelloRoute {
 
 int handler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
+	const auto session = SessionMiddleware(path, true);
+
+	if (!session.valid || session.expired) {
+		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_UNAUTHORIZED, client);
+		return 0;
+	}
+
+	const auto reply = str(
+	    "A session tokened alapján te <code> ",
+	    string_to_html_escaped_string(String((char *)session.user.username, strlen(session.user.username))),
+	    " </code> vagy.");
+
 	HTTPServer::writeStaticHTMLResponse(
 	    HTTPResponse::StaticHTMLResponse{
 	        200,
 	        "OK",
 	        "Szia!",
-	        ":)"},
+	        reply.c_str()},
 	    client);
 #endif
 }
 
 void registerRoute(HTTPServer &server)
 {
-	server.on(HTTPServer::GET, "/hello", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, handler);
+	server.on(HTTPServer::GET, "/api/user/hello", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, handler);
 }
 
 } // namespace UserHelloRoute

@@ -27,6 +27,13 @@ bool searchForValidRefreshToken(
 {
 	return s.refresh_token == token;
 }
+
+bool searchExpiredRenewToken(
+    uint32_t i, const Session &s,
+    unsigned long time)
+{
+	return (s.expire + EK_SESSION_RENEW_TIMEOUT_MS) < time;
+}
 } // namespace
 
 SessionDatabase::SessionDatabase()
@@ -94,6 +101,13 @@ void SessionDatabase::discardAllForUser(uint16_t user_id)
 	// todo implement
 }
 
+void SessionDatabase::update()
+{
+	const auto time = EK_SDB_GET_TIME();
+
+	db.remove_if(0, db.size() - 1, searchExpiredRenewToken, time);
+}
+
 SessionDatabase::SessionInfo SessionDatabase::check(const FixedBuffer<16> &token)
 {
 	const auto search_result = db.search(0, true, searchForValidToken, token);
@@ -101,7 +115,7 @@ SessionDatabase::SessionInfo SessionDatabase::check(const FixedBuffer<16> &token
 	if (search_result.state == QueryState::ERROR)
 		return SessionInfo{
 		    false,
-		    false,
+		    true,
 		    0,
 		    0};
 
@@ -125,7 +139,7 @@ SessionDatabase::SessionInfo SessionDatabase::checkRefresh(const FixedBuffer<16>
 
 	return SessionInfo{
 	    true,
-	    search_result.value.expire < EK_SDB_GET_TIME(),
+	    (search_result.value.expire + EK_SESSION_RENEW_TIMEOUT_MS) < EK_SDB_GET_TIME(),
 	    search_result.index,
 	    search_result.value.user_id};
 }

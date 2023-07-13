@@ -45,22 +45,6 @@
 	}
 }
 
-/* private static event */ Event HTTPServer::disconnectHandler(DisconnectPromise &data)
-{
-	logger.log("DisconnectHandler attempted at time ", millis(), " / ", data.terminate_after);
-
-	if (millis() >= data.terminate_after || is_overloaded) {
-		auto client = EthernetClient(data.clientSocket);
-
-		logger.log("Disconnecting from ", ip_to_string(client.remoteIP()));
-		client.stop();
-
-		return Event::REMOVE;
-	}
-
-	return Event::RERUN;
-}
-
 /* private static */ HTTPServer::RequestProps HTTPServer::extractRequestProps(const char *requestLine, size_t len)
 {
 	const auto firstSpace = Str::find(requestLine, len, ' ');
@@ -121,8 +105,6 @@ void HTTPServer::start()
 
 void HTTPServer::update()
 {
-	m_serverQueue.execute(1);
-
 	// listen for incoming clients
 	EthernetClient client = m_server.available();
 
@@ -192,22 +174,8 @@ void HTTPServer::update()
 			}
 		}
 
-		const auto disconnect_at = millis() + 1000;
-
-		if (!m_serverQueue.tryEnqueue(DisconnectPromise{
-		                                  client.getSocketNumber(),
-		                                  disconnect_at},
-		                              disconnectHandler)) {
-			logger.warning("Server overloaded");
-
-			is_overloaded = true;
-
-			m_serverQueue.forceEnqueue(
-			    DisconnectPromise{client.getSocketNumber(), disconnect_at},
-			    disconnectHandler);
-
-			is_overloaded = false;
-		}
+		logger.log("Disconnecting from ", ip_to_string(client.remoteIP()));
+		client.stop();
 	}
 }
 /* static */ void HTTPServer::writeHTTPHeaders(uint16_t status_code, const char *status_message, const char *content_type, EthernetClient &client)

@@ -71,7 +71,9 @@ int RegisterRoute::registerHandler(const String &path, const Vector<HTTPServer::
 	client.print("state,");
 
 	if (code_valid) {
-		const auto password_hash = Str::hashAndSaltString(password_param);
+		FixedBuffer<32> password_hash;
+		Str::hashAndSaltString(password_param, password_hash);
+
 		const auto reg_success = global::db.user.tryRegister(username_param.c_str(), username_param.length(), password_hash, User::Flags{1, 1});
 
 		if (reg_success) {

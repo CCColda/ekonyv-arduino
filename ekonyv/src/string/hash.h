@@ -4,7 +4,7 @@
 #include "../types/fixedbuffer.h"
 
 namespace Str {
-FixedBuffer<32> hashAndSaltString(const String &str);
+void hashAndSaltString(const String &str, FixedBuffer<32> &output);
 }
 
 #endif // !defined(EKONYV_STRING_HASH_H)

@@ -11,16 +11,17 @@ struct User {
 	};
 
 	uint16_t id;
+	Flags flags;
+	uint8_t username_len;
 	char username[64];
 	FixedBuffer<32> password_hash;
-	Flags flags;
 };
 
 class UserDatabase {
 public:
 	Database<User, 4> db;
 
-	struct LoginResult {
+	struct UserResult {
 		bool success;
 		User user;
 	};
@@ -39,9 +40,11 @@ public:
 	    const FixedBuffer<32> &passwordHash,
 	    User::Flags flags);
 
-	LoginResult tryLogin(
+	UserResult tryLogin(
 	    const char *username, size_t len,
 	    const FixedBuffer<32> &passwordHash);
+
+	UserResult getByID(uint16_t id);
 };
 
 #endif // !defined(EKONYV_USER_DB_H)

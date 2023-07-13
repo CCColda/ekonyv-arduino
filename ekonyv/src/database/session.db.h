@@ -32,6 +32,8 @@ public:
 	void discard(uint32_t id);
 	void discardAllForUser(uint16_t user_id);
 
+	void update();
+
 	SessionInfo check(const FixedBuffer<16> &token);
 	SessionInfo checkRefresh(const FixedBuffer<16> &token);
 };

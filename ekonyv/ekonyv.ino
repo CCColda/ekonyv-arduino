@@ -13,15 +13,6 @@
 
 #include "src/global/global.h"
 
-void printSha(const FixedBuffer<32> &b)
-{
-	for (uint32_t i = 0; i < 32; ++i) {
-		Serial.print(byte_to_string(b.data[i]));
-	}
-
-	Serial.println();
-}
-
 auto logger = Logger("MAIN");
 
 void setup()

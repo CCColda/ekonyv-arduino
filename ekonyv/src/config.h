@@ -40,8 +40,9 @@
 #define EK_NTP_IP "europe.pool.ntp.org"
 #define EK_NTP_OFFSET_S 3600
 
-#define EK_REGISTRATIONREQUEST_TIMEOUT_MS 600000
-#define EK_SESSION_TIMEOUT_MS 1800000
+#define EK_REGISTRATIONREQUEST_TIMEOUT_MS 5 * 60 * 1000
+#define EK_SESSION_TIMEOUT_MS 15 * 60 * 1000
+#define EK_SESSION_RENEW_TIMEOUT_MS 15 * 60 * 1000
 
 #define EK_USERDB_PATH "ekonyv/db/user.txt"
 #define EK_SESSIONDB_PATH "ekonyv/db/session.txt"

@@ -7,7 +7,6 @@
 #include "../config.h"
 
 #include "../arduino/logger.h"
-#include "../eventqueue/eventqueue.h"
 #include "http_response.h"
 
 class HTTPServer {
@@ -76,12 +75,9 @@ private:
 	Handler m_handlerStorage[EK_HTTP_HANDLER_STORAGE];
 	Vector<Handler> m_handlers;
 
-	EventQueue<1> m_serverQueue;
-
 private:
 	void parseRequest(const RequestProps &props, const Vector<HeaderPair> &headers, EthernetClient &client);
 
-	static Event disconnectHandler(DisconnectPromise &data);
 	static RequestProps extractRequestProps(const char *requestLine, size_t len);
 	static HeaderPair extractHeader(const char *requestLine, size_t len);
 

@@ -5,7 +5,7 @@
 #include <SHA256.h>
 
 namespace Str {
-FixedBuffer<32> hashAndSaltString(const String &str)
+void hashAndSaltString(const String &str, FixedBuffer<32> &output)
 {
 	const auto length = str.length();
 
@@ -13,12 +13,10 @@ FixedBuffer<32> hashAndSaltString(const String &str)
 	memcpy(salted_buffer, str.c_str(), length);
 	memcpy(salted_buffer + length, EK_PASSWORD_SALT, EK_PASSWORD_SALT_LEN);
 
-	FixedBuffer<32> hash;
-
 	SHA256 hasher;
 	hasher.update(salted_buffer, length + EK_PASSWORD_SALT_LEN);
-	hasher.finalize(hash.data, 32);
+	hasher.finalize(output.data, 32);
 
 	delete[] salted_buffer;
 }
-}
+} // namespace Str

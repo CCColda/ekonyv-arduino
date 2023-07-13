@@ -1,5 +1,19 @@
 #include "to_string.h"
 
+namespace {
+byte char_to_nibble(char ch)
+{
+	if (ch >= '0' && ch <= '9')
+		return byte(ch - '0');
+	else if (ch >= 'A' && ch <= 'F')
+		return byte(ch - 'A') + 0x0A;
+	else if (ch >= 'a' && ch <= 'f')
+		return byte(ch - 'a') + 0x0A;
+	else
+		return 0x00;
+}
+} // namespace
+
 String ip_to_string(const IPAddress &address)
 {
 	String result = String((unsigned int)address[0], 10);
@@ -14,6 +28,14 @@ String byte_to_string(const byte &b)
 {
 	return b < 0x10 ? String('0') + String((unsigned int)b, 0x10)
 	                : String((unsigned int)b, 0x10);
+}
+
+byte string_to_byte(const char *str, size_t len)
+{
+	if (len < 2)
+		return 0x00;
+
+	return (char_to_nibble(str[0]) << 4) | char_to_nibble(str[1]);
 }
 
 String mac_to_string(const byte *mac)

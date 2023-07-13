@@ -8,6 +8,9 @@ bool matchUsernamePassword(
     uint32_t i, const User &user,
     const char *username, size_t len, FixedBuffer<32> passwordHash)
 {
+	if (len != user.username_len)
+		return false;
+
 	return Str::compare(user.username, username, len) && passwordHash == user.password_hash;
 }
 
@@ -15,7 +18,17 @@ bool matchUsername(
     uint32_t i, const User &user,
     const char *username, size_t len)
 {
+	if (len != user.username_len)
+		return false;
+
 	return Str::compare(user.username, username, len);
+}
+
+bool matchID(
+    uint32_t i, const User &user,
+    uint16_t id)
+{
+	return user.id == id;
 }
 } // namespace
 
@@ -48,6 +61,9 @@ bool UserDatabase::tryRegister(
     const FixedBuffer<32> &passwordHash,
     User::Flags flags)
 {
+	if (len > sizeof(User::username))
+		return false;
+
 	const auto searchResult = db.search(
 	    0, false,
 	    matchUsername,
@@ -60,19 +76,17 @@ bool UserDatabase::tryRegister(
 	User user;
 	user.id = findNextID();
 	user.flags = flags;
-
-	memcpy(user.password_hash.data, passwordHash.data, sizeof(User::password_hash));
+	user.username_len = len;
 	memcpy(user.username, username, len);
-	if (len < sizeof(User::username)) {
-		user.username[len] = '\0';
-	}
+	memset(user.username + len, 0, sizeof(user.username) - len);
+	memcpy(user.password_hash.data, passwordHash.data, sizeof(User::password_hash));
 
 	db.append(user);
 
 	return true;
 }
 
-UserDatabase::LoginResult UserDatabase::tryLogin(
+UserDatabase::UserResult UserDatabase::tryLogin(
     const char *username, size_t len,
     const FixedBuffer<32> &passwordHash)
 {
@@ -81,8 +95,21 @@ UserDatabase::LoginResult UserDatabase::tryLogin(
 	    matchUsernamePassword,
 	    username, len, passwordHash);
 
-	if (searchResult.state == QueryState::SUCCESS)
-		return LoginResult{false, User()};
+	if (searchResult.state != QueryState::SUCCESS)
+		return UserResult{false, User()};
 
-	return LoginResult{true, searchResult.value};
+	return UserResult{true, searchResult.value};
+}
+
+UserDatabase::UserResult UserDatabase::getByID(uint16_t id)
+{
+	const auto searchResult = db.search(
+	    0, false,
+	    matchID,
+	    id);
+
+	if (searchResult.state != QueryState::SUCCESS)
+		return UserResult{false, User()};
+
+	return UserResult{true, searchResult.value};
 }
