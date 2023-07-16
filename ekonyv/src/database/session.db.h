@@ -18,7 +18,7 @@ public:
 	struct SessionInfo {
 		bool valid;
 		bool expired;
-		uint32_t id;
+		uint32_t index;
 		uint16_t user_id;
 	};
 

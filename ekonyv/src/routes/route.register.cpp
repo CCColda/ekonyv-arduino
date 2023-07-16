@@ -6,6 +6,8 @@
 
 #include "../string/hash.h"
 
+#include "../middleware/parameter.mw.h"
+
 int RegisterRoute::requestCodeHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
@@ -16,6 +18,7 @@ int RegisterRoute::requestCodeHandler(const String &path, const Vector<HTTPServe
 
 	memcpy(ip.data, (const void *)&remoteIP, 4);
 
+	global::db.reg_req.update();
 	const auto initiation = global::db.reg_req.tryInitiate(ip);
 
 	client.println("key,value");
@@ -43,26 +46,37 @@ int RegisterRoute::requestCodeHandler(const String &path, const Vector<HTTPServe
 int RegisterRoute::registerHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
+	const auto prep = ParameterMiddleware::preparePath(path);
+
+	const auto code_param = ParameterMiddleware("code", 4, path, prep);
+	const auto username = ParameterMiddleware("username", 8, path, prep);
+	const auto password = ParameterMiddleware("password", 8, path, prep);
+
+	if (!code_param)
+		return code_param.sendMissingResponse(client);
+
+	if (!username)
+		return username.sendMissingResponse(client);
+
+	if (!password)
+		return password.sendMissingResponse(client);
+
+	if (code_param.value.length() != 4 || username.value.length() == 0 ||
+	    username.value.length() > 64 || password.value.length() == 0 ||
+	    password.value.length() > 32) {
+		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
+		return 0;
+	}
+
+	// todo verify username for valid alphanumerical characters + some symbols only
 
 	const auto remoteIP = uint32_t(client.remoteIP());
 	FixedBuffer<4> ip;
 
 	memcpy(ip.data, (const void *)&remoteIP, 4);
 
-	const char *path_c_string = path.c_str();
-	const auto code_param = Url::getParameter(path_c_string, path.length(), "code", 4);
-	const auto username_param = Url::getParameter(path_c_string, path.length(), "username", 8);
-	const auto password_param = Url::getParameter(path_c_string, path.length(), "password", 8);
-
-	if (code_param.length() != 4 || username_param.length() == 0 ||
-	    username_param.length() > 64 || password_param.length() == 0 ||
-	    password_param.length() > 32) {
-		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
-		return 0;
-	}
-
 	FixedBuffer<4> code;
-	memcpy(code.data, code_param.c_str(), 4);
+	memcpy(code.data, code_param.value.c_str(), 4);
 
 	const auto code_valid = global::db.reg_req.checkCode(ip, code);
 
@@ -72,9 +86,9 @@ int RegisterRoute::registerHandler(const String &path, const Vector<HTTPServer::
 
 	if (code_valid) {
 		FixedBuffer<32> password_hash;
-		Str::hashAndSaltString(password_param, password_hash);
+		Str::hashAndSaltString(password.value, password_hash);
 
-		const auto reg_success = global::db.user.tryRegister(username_param.c_str(), username_param.length(), password_hash, User::Flags{1, 1});
+		const auto reg_success = global::db.user.tryRegister(username.value.c_str(), username.value.length(), password_hash, User::Flags{1, 1});
 
 		if (reg_success) {
 			client.println("success");

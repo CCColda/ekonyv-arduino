@@ -27,6 +27,12 @@ const StaticHTMLResponse HTML_UNAUTHORIZED = {
     "Unauthorized",
     "401 - Unauthorized",
     "Invalid credentials."};
+
+const StaticHTMLResponse HTMP_NOT_IMPLEMENTED = {
+    501,
+    "Unimplemented",
+    "501 - Unimplemented",
+    "The endpoint you provided was registered but not implemented."};
 } // namespace HTTPResponse
 
 #endif // !defined(EKONYV_HTTP_RESPONSE_H)

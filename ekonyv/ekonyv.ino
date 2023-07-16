@@ -80,9 +80,6 @@ void loop()
 	global::network.maintain();
 	global::ntp.update();
 	global::server.update();
-
-	// todo use timeout
-	global::db.reg_req.update();
 #endif
 
 	global::eventqueue.execute(5);

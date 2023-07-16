@@ -4,28 +4,34 @@
 
 #include "../string/hash.h"
 #include "../string/to_string.h"
-#include "../string/url.h"
+
+#include "../middleware/parameter.mw.h"
 
 int LoginRoute::loginHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
-	const char *path_c_string = path.c_str();
-	const auto username_param = Url::getParameter(path_c_string, path.length(), "username", 8);
-	const auto password_param = Url::getParameter(path_c_string, path.length(), "password", 8);
+	const auto prep = ParameterMiddleware::preparePath(path);
+	const auto username = ParameterMiddleware("username", 8, path, prep);
+	const auto password = ParameterMiddleware("password", 8, path, prep);
 
-	if (username_param.length() == 0 || username_param.length() > 64 ||
-	    password_param.length() == 0 || password_param.length() > 32) {
+	if (!username)
+		return username.sendMissingResponse(client);
+
+	if (!password)
+		return password.sendMissingResponse(client);
+
+	if (username.value.length() == 0 || username.value.length() > 64 ||
+	    password.value.length() == 0 || password.value.length() > 32) {
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
 		return 0;
 	}
 
 	FixedBuffer<32> password_hash;
-	Str::hashAndSaltString(password_param, password_hash);
+	Str::hashAndSaltString(password.value, password_hash);
 
-	Serial.println("Login hash");
-	Serial.println(fixed_buffer_to_string(password_hash));
-
-	const auto loginResult = global::db.user.tryLogin(username_param.c_str(), username_param.length(), password_hash);
+	const auto loginResult = global::db.user.tryLogin(
+	    username.value.c_str(), username.value.length(),
+	    password_hash);
 
 	if (!loginResult.success) {
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_UNAUTHORIZED, client);
@@ -49,14 +55,14 @@ int LoginRoute::loginHandler(const String &path, const Vector<HTTPServer::Header
 int LoginRoute::renewHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
-
+// todo implement
 #endif
 }
 
 int LoginRoute::logoutHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
-
+// todo implement
 #endif
 }
 

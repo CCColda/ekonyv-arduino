@@ -117,7 +117,7 @@ SessionDatabase::SessionInfo SessionDatabase::check(const FixedBuffer<16> &token
 		    false,
 		    true,
 		    0,
-		    0};
+		    User::INVALID_ID};
 
 	return SessionInfo{
 	    true,

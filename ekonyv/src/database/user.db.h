@@ -15,6 +15,8 @@ struct User {
 	uint8_t username_len;
 	char username[64];
 	FixedBuffer<32> password_hash;
+
+	constexpr static uint16_t INVALID_ID = 0;
 };
 
 class UserDatabase {
