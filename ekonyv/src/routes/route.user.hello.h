@@ -8,12 +8,12 @@
 
 namespace UserHelloRoute {
 
-int handler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
+int handler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
 	const auto session = SessionMiddleware(path, true);
 
-	if (!session.valid || session.expired) {
+	if (!session) {
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_UNAUTHORIZED, client);
 		return 0;
 	}
@@ -35,7 +35,7 @@ int handler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, E
 
 void registerRoute(HTTPServer &server)
 {
-	server.on(HTTPServer::GET, "/api/user/hello", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, handler);
+	server.on(HTTP::GET, "/api/user/hello", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, handler);
 }
 
 } // namespace UserHelloRoute

@@ -80,6 +80,7 @@ void loop()
 	global::network.maintain();
 	global::ntp.update();
 	global::server.update();
+	global::requests.update();
 #endif
 
 	global::eventqueue.execute(5);

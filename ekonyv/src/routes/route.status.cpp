@@ -9,7 +9,7 @@ static const char *NETWORK_MODES[Network::Mode::m_size] = {
     "dhcp",
     "static"};
 
-int StatusRoute::handler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
+int StatusRoute::handler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
 	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
@@ -42,5 +42,5 @@ int StatusRoute::handler(const String &path, const Vector<HTTPServer::HeaderPair
 
 void StatusRoute::registerRoute(HTTPServer &server)
 {
-	server.on(HTTPServer::GET, "/status", HTTPServer::HandlerBehavior::NONE, handler);
+	server.on(HTTP::GET, "/status", HTTPServer::HandlerBehavior::NONE, handler);
 }

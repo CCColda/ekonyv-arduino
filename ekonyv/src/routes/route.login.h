@@ -7,9 +7,9 @@
 
 namespace LoginRoute {
 
-int loginHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client);
-int renewHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client);
-int logoutHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client);
+int loginHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client);
+int renewHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client);
+int logoutHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client);
 void registerRoute(HTTPServer &server);
 
 } // namespace LoginRoute

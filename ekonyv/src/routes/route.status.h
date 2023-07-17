@@ -5,7 +5,7 @@
 
 namespace StatusRoute {
 
-int handler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client);
+int handler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client);
 void registerRoute(HTTPServer &server);
 
 } // namespace StatusRoute

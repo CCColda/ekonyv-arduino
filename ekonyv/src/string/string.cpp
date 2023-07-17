@@ -50,9 +50,9 @@ size_t findLast(const char *str, size_t len, char chr)
 	if (len == 0)
 		return NOT_FOUND;
 
-	for (size_t i = len - 1; i >= 0; --i) {
-		if (str[i] == chr)
-			return i;
+	for (size_t i = len; i > 0; --i) {
+		if (str[i - 1] == chr)
+			return i - 1;
 	}
 
 	return NOT_FOUND;
@@ -61,14 +61,23 @@ size_t findLast(const char *str, size_t len, char chr)
 size_t findFirstNotOf(const char *str, size_t len, const char *charset, size_t charsetlen, size_t start)
 {
 	if (start >= len)
-		return NOT_FOUND;
+		return 0;
 
-	for (size_t i = start; i < len; ++i)
-		for (size_t j = 0; j < charsetlen; ++j)
-			if (str[i] != charset[j])
-				return i;
+	for (size_t i = start; i < len; ++i) {
+		bool found = false;
 
-	return NOT_FOUND;
+		for (size_t j = 0; j < charsetlen; ++j) {
+			if (str[i] == charset[j]) {
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+			return i;
+	}
+
+	return len;
 }
 
 String fromBuffer(const char *buf, size_t begin, size_t end)

@@ -3,20 +3,16 @@
 #include "../string/string.h"
 #include "../string/to_string.h"
 
+#include "httpclientparser.h"
+
 /* private static */ Logger HTTPServer::logger = Logger("HTTP");
-
-/* private static */ const char *HTTPServer::ACCEPTED_HEADERS[HTTPServer::Header::h_size] = {
-    "Authorization",
-    "Accept"};
-
-/* private static */ const char *HTTPServer::ACCEPTED_METHODS[HTTPServer::Method::m_size] = {
-    "GET",
-    "POST",
-    "UPDATE"};
 
 /* private static */ bool HTTPServer::is_overloaded = false;
 
-/* private */ void HTTPServer::parseRequest(const HTTPServer::RequestProps &props, const Vector<HeaderPair> &headers, EthernetClient &client)
+/* private */ void HTTPServer::parseRequest(
+    const HTTP::ClientRequestProps &props,
+    const Vector<HTTP::ClientHeaderPair> &headers,
+    EthernetClient &client)
 {
 	bool found = false;
 
@@ -45,50 +41,12 @@
 	}
 }
 
-/* private static */ HTTPServer::RequestProps HTTPServer::extractRequestProps(const char *requestLine, size_t len)
-{
-	const auto firstSpace = Str::find(requestLine, len, ' ');
-	const auto secondSpace = Str::find(requestLine, len, ' ', firstSpace + 1);
-
-	if (firstSpace == Str::NOT_FOUND || secondSpace == Str::NOT_FOUND)
-		return RequestProps{Method::m_unknown, String()};
-
-	const size_t method_index = Str::compareToMap(requestLine, firstSpace, ACCEPTED_METHODS, Method::m_size);
-
-	if (method_index == Str::NOT_FOUND)
-		return RequestProps{Method::m_unknown, String()};
-
-	return RequestProps{
-	    (Method)(uint8_t)method_index,
-	    Str::fromBuffer(requestLine, firstSpace + 1, secondSpace)};
-}
-
-/* private static */ HTTPServer::HeaderPair HTTPServer::extractHeader(const char *requestLine, size_t len)
-{
-	const auto colon = Str::find(requestLine, len, ':');
-	if (colon == Str::NOT_FOUND)
-		return HeaderPair{Header::h_unknown, String()};
-
-	const size_t map_index = Str::compareToMap(requestLine, colon, ACCEPTED_HEADERS, Header::h_size);
-
-	if (map_index == Str::NOT_FOUND)
-		return HeaderPair{Header::h_unknown, String()};
-
-	const size_t first_non_whitespace = Str::findFirstNotOf(requestLine, len, Str::WHITESPACE, Str::WHITESPACE_LEN, colon + 1);
-	if (first_non_whitespace == Str::NOT_FOUND)
-		return HeaderPair{Header::h_unknown, String()};
-
-	return HeaderPair{
-	    (Header)(uint8_t)map_index,
-	    Str::fromBuffer(requestLine, first_non_whitespace, len)};
-}
-
 HTTPServer::HTTPServer() : m_server(EK_SERVER_PORT), m_handlers(), m_handlerStorage{}
 {
 	m_handlers.setStorage<EK_HTTP_HANDLER_STORAGE>(m_handlerStorage);
 }
 
-void HTTPServer::on(Method method, const char *path, uint8_t behavior, HTTPRequestHandlerPtr handler)
+void HTTPServer::on(HTTP::Method method, const char *path, uint8_t behavior, HTTPRequestHandlerPtr handler)
 {
 	m_handlers.push_back(Handler{
 	    path,
@@ -105,72 +63,35 @@ void HTTPServer::start()
 
 void HTTPServer::update()
 {
-	// listen for incoming clients
 	EthernetClient client = m_server.available();
 
 	if (client) {
-		char buffer[512];
-		size_t buffer_saturation = 0;
-		bool props_parsed = false;
-		auto props = RequestProps{};
-
-		HeaderPair headerStorage[Header::h_size] = {};
-		auto headers = Vector<HeaderPair>();
-		headers.setStorage<Header::h_size>(headerStorage);
-
 		logger.log("Incoming connection from ", ip_to_string(client.remoteIP()));
+
+		HTTPClientParser parser;
 
 		while (client.connected()) {
 			if (client.available()) {
-				size_t bytes_read = client.readBytes(buffer + buffer_saturation, sizeof(buffer) - buffer_saturation);
+				bool should_break = false;
 
-				if (!props_parsed) {
-					props_parsed = true;
-
-					const auto headerEnd = Str::find(buffer, bytes_read, '\n');
-					if (headerEnd == Str::NOT_FOUND) {
-						logger.error("Invalid request from ", ip_to_string(client.remoteIP()), "; URI is too long");
+				switch (parser.parseBlock(client)) {
+					case HTTP::FAIL: {
+						should_break = true;
 						writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
 						break;
 					}
-
-					props = extractRequestProps(buffer, headerEnd);
-					memmove(buffer, buffer + headerEnd + 1, bytes_read - headerEnd - 1);
-
-					bytes_read -= headerEnd + 1;
+					case HTTP::SUCCESS: {
+						should_break = true;
+						parseRequest(parser.props, parser.headers, client);
+						break;
+					}
+					default: {
+						break;
+					}
 				}
 
-				size_t offset = 0;
-				size_t new_line_char = Str::find(buffer, bytes_read, '\n');
-
-				while (new_line_char != Str::NOT_FOUND && new_line_char != 0) {
-					const size_t extraction_length = buffer[new_line_char - 1] == '\r' ? new_line_char - 1 : new_line_char;
-					const HeaderPair header = extractHeader(buffer + offset, extraction_length - offset);
-
-					if (header.name != Header::h_unknown)
-						headers.push_back(header);
-
-					offset = new_line_char + 1;
-					new_line_char = Str::find(buffer, bytes_read, '\n', offset);
-				}
-
-				if (bytes_read < 512) {
-					parseRequest(props, headers, client);
+				if (should_break)
 					break;
-				}
-				else {
-					const auto last_newline_in_buffer = Str::findLast(buffer, bytes_read, '\n');
-
-					if (last_newline_in_buffer == 0 || last_newline_in_buffer == Str::NOT_FOUND) {
-						logger.error("Invalid request from ", ip_to_string(client.remoteIP()), "; line over 512 chars");
-						writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
-						break;
-					}
-
-					buffer_saturation = bytes_read - last_newline_in_buffer;
-
-					memmove(buffer, buffer + last_newline_in_buffer, buffer_saturation);
-				}
 			}
 		}
 

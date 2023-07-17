@@ -6,6 +6,8 @@
 
 #include "../config.h"
 
+#include "http.h"
+
 #include "../arduino/logger.h"
 #include "http_response.h"
 
@@ -13,46 +15,19 @@ class HTTPServer {
 public:
 	using clock_t = decltype(millis());
 
-	enum Header : uint8_t {
-		AUTHORIZATION,
-		ACCEPT,
-		h_size,
-
-		h_unknown
-	};
-
 	struct HandlerBehavior {
 		static const uint8_t NONE = 0x00;
 		static const uint8_t ALLOW_SUBPATHS = 0x01;
 		static const uint8_t ALLOW_PARAMETERS = 0x02;
 	};
 
-	enum Method : uint8_t {
-		GET,
-		POST,
-		UPDATE,
-		m_size,
-
-		m_unknown
-	};
-
-	struct HeaderPair {
-		Header name;
-		String value;
-	};
-
-	struct RequestProps {
-		Method method;
-		String path;
-	};
-
-	typedef int (*HTTPRequestHandlerPtr)(const String &path, const Vector<HeaderPair> &headers, EthernetClient &client);
+	typedef int (*HTTPRequestHandlerPtr)(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client);
 
 	struct Handler {
 		const char *path;
 		size_t pathlen;
 		uint8_t behavior;
-		Method method;
+		HTTP::Method method;
 		HTTPRequestHandlerPtr handler;
 	};
 
@@ -62,8 +37,6 @@ public:
 	};
 
 private:
-	static const char *ACCEPTED_HEADERS[Header::h_size];
-	static const char *ACCEPTED_METHODS[Method::m_size];
 	static Logger logger;
 
 	//! @brief When set to true, disconnect events will ignore the timer
@@ -76,15 +49,15 @@ private:
 	Vector<Handler> m_handlers;
 
 private:
-	void parseRequest(const RequestProps &props, const Vector<HeaderPair> &headers, EthernetClient &client);
-
-	static RequestProps extractRequestProps(const char *requestLine, size_t len);
-	static HeaderPair extractHeader(const char *requestLine, size_t len);
+	void parseRequest(
+	    const HTTP::ClientRequestProps &props,
+	    const Vector<HTTP::ClientHeaderPair> &headers,
+	    EthernetClient &client);
 
 public:
 	HTTPServer();
 
-	void on(Method method, const char *path, uint8_t behavior, HTTPRequestHandlerPtr handler);
+	void on(HTTP::Method method, const char *path, uint8_t behavior, HTTPRequestHandlerPtr handler);
 
 	void start();
 	void update();

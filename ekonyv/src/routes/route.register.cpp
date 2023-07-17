@@ -8,7 +8,7 @@
 
 #include "../middleware/parameter.mw.h"
 
-int RegisterRoute::requestCodeHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
+int RegisterRoute::requestCodeHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
 	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
@@ -43,7 +43,7 @@ int RegisterRoute::requestCodeHandler(const String &path, const Vector<HTTPServe
 #endif
 }
 
-int RegisterRoute::registerHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
+int RegisterRoute::registerHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
 	const auto prep = ParameterMiddleware::preparePath(path);
@@ -110,6 +110,6 @@ int RegisterRoute::registerHandler(const String &path, const Vector<HTTPServer::
 
 void RegisterRoute::registerRoute(HTTPServer &server)
 {
-	server.on(HTTPServer::POST, "/api/user/req_code", HTTPServer::HandlerBehavior::NONE, requestCodeHandler);
-	server.on(HTTPServer::POST, "/api/user/register", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, registerHandler);
+	server.on(HTTP::POST, "/api/user/req_code", HTTPServer::HandlerBehavior::NONE, requestCodeHandler);
+	server.on(HTTP::POST, "/api/user/register", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, registerHandler);
 }

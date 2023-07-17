@@ -229,15 +229,17 @@ public:
 
 		m_file.open();
 
-		for (uint32_t i = reversed ? m_num_records - start - 1 : 0;
-		     reversed ? i >= 0 : i < m_num_records;
+		for (uint32_t i = reversed ? m_num_records - start : 0;
+		     reversed ? i > 0 : i < m_num_records;
 		     reversed ? --i : ++i) {
 
-			auto record = Record();
-			m_file.readNth(i, &record, sizeof(record));
+			const auto corrected_i = i - 1;
 
-			if (searchFn(i, record, searchArgs...)) {
-				result = QueryResult{QueryState::SUCCESS, i, record};
+			auto record = Record();
+			m_file.readNth(corrected_i, &record, sizeof(record));
+
+			if (searchFn(corrected_i, record, searchArgs...)) {
+				result = QueryResult{QueryState::SUCCESS, corrected_i, record};
 				break;
 			}
 		}
@@ -253,19 +255,21 @@ public:
 		if (!trySave())
 			return false;
 
-		for (uint32_t i = reversed ? end - 1 : start;
-		     reversed ? i >= start : i < end;
+		for (uint32_t i = reversed ? end : start;
+		     reversed ? i > start : i < end;
 		     reversed ? --i : ++i) {
 			if (!m_file.is_open())
 				m_file.open();
 
+			const auto corrected_i = i - 1;
+
 			auto result = Record();
-			m_file.readNth(i, &result, sizeof(result));
+			m_file.readNth(corrected_i, &result, sizeof(result));
 
 			if (unlockFile)
 				m_file.close();
 
-			iterFn(i, result, iterArgs...);
+			iterFn(corrected_i, result, iterArgs...);
 		}
 
 		if (m_file.is_open())
@@ -284,15 +288,17 @@ public:
 
 		m_file.open();
 
-		for (uint32_t i = start - 1; i >= 0; --i) {
-			auto record = Record();
-			m_file.readNth(i, &record, sizeof(record));
+		for (uint32_t i = start; i > 0; --i) {
+			const auto corrected_i = i - 1;
 
-			if (searchFn(i, record, searchArgs...)) {
+			auto record = Record();
+			m_file.readNth(corrected_i, &record, sizeof(record));
+
+			if (searchFn(corrected_i, record, searchArgs...)) {
 				++result;
 				--m_num_records;
 
-				m_file.erase(i);
+				m_file.erase(corrected_i);
 			}
 		}
 

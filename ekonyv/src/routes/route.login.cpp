@@ -7,7 +7,7 @@
 
 #include "../middleware/parameter.mw.h"
 
-int LoginRoute::loginHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
+int LoginRoute::loginHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
 	const auto prep = ParameterMiddleware::preparePath(path);
@@ -52,14 +52,14 @@ int LoginRoute::loginHandler(const String &path, const Vector<HTTPServer::Header
 #endif
 }
 
-int LoginRoute::renewHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
+int LoginRoute::renewHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
 // todo implement
 #endif
 }
 
-int LoginRoute::logoutHandler(const String &path, const Vector<HTTPServer::HeaderPair> &headers, EthernetClient &client)
+int LoginRoute::logoutHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
 // todo implement
@@ -68,7 +68,7 @@ int LoginRoute::logoutHandler(const String &path, const Vector<HTTPServer::Heade
 
 void LoginRoute::registerRoute(HTTPServer &server)
 {
-	server.on(HTTPServer::POST, "/api/user/login", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, loginHandler);
-	server.on(HTTPServer::POST, "/api/user/renew", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, renewHandler);
-	server.on(HTTPServer::POST, "/api/user/logout", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, logoutHandler);
+	server.on(HTTP::POST, "/api/user/login", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, loginHandler);
+	server.on(HTTP::POST, "/api/user/renew", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, renewHandler);
+	server.on(HTTP::POST, "/api/user/logout", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, logoutHandler);
 }

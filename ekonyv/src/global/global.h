@@ -6,6 +6,7 @@
 #include <NTPClient.h>
 
 #include "../eventqueue/eventqueue.h"
+#include "../network/httprequestmanager.h"
 #include "../network/httpserver.h"
 #include "../network/network.h"
 #include "../storage/storage.h"
@@ -25,6 +26,7 @@ struct Databases {
 extern Network network;
 extern HTTPServer server;
 extern NTPClient ntp;
+extern HTTPRequestManager requests;
 #else
 #warning "Ethernet is disabled"
 #endif

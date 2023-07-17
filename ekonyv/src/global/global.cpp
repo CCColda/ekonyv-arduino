@@ -11,6 +11,7 @@ namespace global {
 Network network = Network(5);
 HTTPServer server = HTTPServer();
 NTPClient ntp = NTPClient(ethUDP, EK_NTP_IP, EK_NTP_OFFSET_S);
+HTTPRequestManager requests = HTTPRequestManager();
 #endif
 
 Storage sd = Storage(SDCARD_SS_PIN);
