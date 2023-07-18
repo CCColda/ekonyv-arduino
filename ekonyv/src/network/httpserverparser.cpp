@@ -133,25 +133,26 @@ HTTP::ParseResult HTTPServerParser::parseBlock(EthernetClient &client)
 		}
 
 		if (body_parse_cb) {
-			const auto result = body_parse_cb.call(m_buffer, m_buffer_saturation);
+			const size_t last_newline_in_buffer = Str::findLast(m_buffer, m_buffer_saturation, '\n');
+			if (last_newline_in_buffer == 0 || last_newline_in_buffer == Str::NOT_FOUND || last_newline_in_buffer >= m_buffer_saturation) {
+				logger.error("Invalid request from ", ip_to_string(client.remoteIP()), "; line over " __EK_MACRO_STRING(EK_HTTP_BUFFER_SIZE) " chars");
+				return HTTP::FAIL;
+			}
+
+			const size_t adjusted_last_newline = m_buffer[last_newline_in_buffer - 1] == '\r' ? last_newline_in_buffer - 1 : last_newline_in_buffer;
+
+			const auto result = body_parse_cb.call(m_buffer, adjusted_last_newline);
 			if (result != HTTP::CONTINUE)
 				return result;
+
+			memmove(m_buffer, m_buffer + last_newline_in_buffer + 1, m_buffer_saturation - last_newline_in_buffer - 1);
+
+			m_buffer_saturation -= last_newline_in_buffer + 1;
 		}
 	}
 
 	if (bytes_read < EK_HTTP_BUFFER_SIZE)
 		return HTTP::SUCCESS;
-	/*
-	    const size_t last_newline_in_buffer = Str::findLast(m_buffer, bytes_in_buffer, '\n');
-
-	    if (last_newline_in_buffer == 0 || last_newline_in_buffer == Str::NOT_FOUND) {
-	        logger.error("Invalid request from ", ip_to_string(client.remoteIP()), "; line over " __EK_MACRO_STRING(EK_HTTP_BUFFER_SIZE) " chars");
-	        return HTTP::FAIL;
-	    }
-
-	    m_buffer_saturation = bytes_read - last_newline_in_buffer;
-
-	    memmove(m_buffer, m_buffer + last_newline_in_buffer, m_buffer_saturation); */
 
 	return HTTP::CONTINUE;
 }

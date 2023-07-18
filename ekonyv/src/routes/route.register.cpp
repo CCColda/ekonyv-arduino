@@ -2,8 +2,6 @@
 
 #include "../global/global.h"
 
-#include "../string/url.h"
-
 #include "../string/hash.h"
 
 #include "../middleware/parameter.mw.h"

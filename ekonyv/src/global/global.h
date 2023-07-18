@@ -27,6 +27,7 @@ extern Network network;
 extern HTTPServer server;
 extern NTPClient ntp;
 extern HTTPRequestManager requests;
+
 #else
 #warning "Ethernet is disabled"
 #endif
@@ -34,6 +35,8 @@ extern HTTPRequestManager requests;
 extern Storage sd;
 extern Databases db;
 extern EventQueue<32> eventqueue;
+
+unsigned long time();
 } // namespace global
 
 #endif // !defined(EKONYV_GLOBAL_H)

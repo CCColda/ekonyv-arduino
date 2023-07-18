@@ -23,11 +23,11 @@ adatokat és ISBN kódokat kérdez le; egy Android alkalmazás backend-je.
 - [x] Felhasználók jelszavainak SHA-256 titkosítása
 - [x] Bejelentkezés session token-ért
 - [x] Session token ellenőrzése védett API végpontokon
-- [ ] ISBN-lekérdezés API végpont
-  - [ ] Csak felhasználókra szűkítve
-  - [ ] Lekérdezés (3-4 HTTP GET)
-  - [ ] Ideiglenes tárolás
-  - [ ] Adat visszaküldése HTTP-n
+- [ ] ~~ISBN-lekérdezés API végpont~~
+  - [ ] ~~Csak felhasználókra szűkítve~~
+  - [ ] ~~Lekérdezés (3-4 HTTP GET)~~
+  - [ ] ~~Ideiglenes tárolás~~
+  - [ ] ~~Adat visszaküldése HTTP-n~~
 - [ ] Könyvtárolás API végpont (+ permission-ök)
 - [ ] Lekérdezés API végpont
 - [ ] Törlés, szerkesztés végpont

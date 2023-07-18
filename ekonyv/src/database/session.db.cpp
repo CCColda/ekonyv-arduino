@@ -2,12 +2,6 @@
 
 #include "../global/global.h"
 
-#if EK_ETHERNET
-#define EK_SDB_GET_TIME global::ntp.getEpochTime
-#else
-#define EK_SDB_GET_TIME millis
-#endif
-
 namespace {
 byte getRandomByte()
 {
@@ -64,7 +58,7 @@ Session SessionDatabase::start(uint16_t user_id)
 	    new_session_token,
 	    new_refresh_token,
 	    user_id,
-	    EK_SDB_GET_TIME() + EK_SESSION_TIMEOUT_MS};
+	    global::time() + EK_SESSION_TIMEOUT_MS};
 
 	db.append(result);
 
@@ -84,7 +78,7 @@ Session SessionDatabase::extend(uint32_t id, uint16_t user_id)
 	    new_session_token,
 	    new_refresh_token,
 	    user_id,
-	    EK_SDB_GET_TIME() + EK_SESSION_TIMEOUT_MS};
+	    global::time() + EK_SESSION_TIMEOUT_MS};
 
 	db.modify(id, result);
 
@@ -103,7 +97,7 @@ void SessionDatabase::discardAllForUser(uint16_t user_id)
 
 void SessionDatabase::update()
 {
-	const auto time = EK_SDB_GET_TIME();
+	const auto time = global::time();
 
 	db.remove_if(0, db.size() - 1, searchExpiredRenewToken, time);
 }
@@ -121,7 +115,7 @@ SessionDatabase::SessionInfo SessionDatabase::check(const FixedBuffer<16> &token
 
 	return SessionInfo{
 	    true,
-	    search_result.value.expire < EK_SDB_GET_TIME(),
+	    search_result.value.expire < global::time(),
 	    search_result.index,
 	    search_result.value.user_id};
 }
@@ -139,7 +133,7 @@ SessionDatabase::SessionInfo SessionDatabase::checkRefresh(const FixedBuffer<16>
 
 	return SessionInfo{
 	    true,
-	    (search_result.value.expire + EK_SESSION_RENEW_TIMEOUT_MS) < EK_SDB_GET_TIME(),
+	    (search_result.value.expire + EK_SESSION_RENEW_TIMEOUT_MS) < global::time(),
 	    search_result.index,
 	    search_result.value.user_id};
 }

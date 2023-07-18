@@ -67,10 +67,6 @@ void setup()
 	RegisterRoute::registerRoute(global::server);
 	LoginRoute::registerRoute(global::server);
 	UserHelloRoute::registerRoute(global::server);
-
-	/* auto init = global::db.reg_req.tryInitiate({{192, 168, 0, 101}});
-	Serial.write((char *)init.req.code.data, 4);
-	Serial.println(); */
 #endif
 }
 

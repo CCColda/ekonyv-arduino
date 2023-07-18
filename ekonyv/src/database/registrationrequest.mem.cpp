@@ -4,12 +4,6 @@
 
 #include "../global/global.h"
 
-#if EK_ETHERNET
-#define EK_REGREQ_GET_TIME global::ntp.getEpochTime
-#else
-#define EK_REGREQ_GET_TIME millis
-#endif
-
 namespace {
 const char VALID_CODE_LETTERS[] = {
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
@@ -31,7 +25,7 @@ RegistrationRequest::RegistrationRequest()
 
 void RegistrationRequest::update()
 {
-	if (expire <= EK_REGREQ_GET_TIME())
+	if (expire <= global::time())
 		active = false;
 }
 
@@ -45,7 +39,7 @@ bool RegistrationRequest::tryInitiate(const FixedBuffer<4> &ip)
 
 	for_ip = ip;
 	active = true;
-	expire = EK_REGREQ_GET_TIME() + EK_REGISTRATIONREQUEST_TIMEOUT_MS;
+	expire = global::time() + EK_REGISTRATIONREQUEST_TIMEOUT_MS;
 	return true;
 }
 

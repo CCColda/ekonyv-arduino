@@ -36,9 +36,7 @@ private:
 
 public:
 	Callback()
-	    : m_userdata(nullptr), m_userdata_size(0), m_handler(nullptr), call_count(0)
-	{
-	}
+	    : m_userdata(nullptr), m_userdata_size(0), m_handler(nullptr), call_count(0) {}
 
 	Callback(const Callback &other)
 	    : m_userdata(nullptr), m_userdata_size(other.m_userdata_size),
@@ -55,8 +53,13 @@ public:
 
 	~Callback()
 	{
+		clear();
+	}
+
+	void clear()
+	{
 		if (m_userdata_size != 0) {
-			delete[] m_userdata;
+			delete[] (byte *)m_userdata;
 			m_userdata = nullptr;
 			m_userdata_size = 0;
 		}
@@ -64,10 +67,27 @@ public:
 		m_handler = nullptr;
 	}
 
+	Callback &operator=(const Callback &other)
+	{
+		clear();
+
+		m_userdata_size = other.m_userdata_size;
+		m_handler = other.m_handler;
+
+		if (m_userdata_size != 0) {
+			m_userdata = new byte[m_userdata_size];
+			memcpy(m_userdata, other.m_userdata, m_userdata_size);
+		}
+		else {
+			m_userdata = other.m_userdata;
+		}
+	}
+
 	void set(RawPtr fn, void *userdata)
 	{
 		m_handler = fn;
 		m_userdata = userdata;
+		m_userdata_size = 0;
 	}
 
 	template <typename T>
@@ -93,7 +113,8 @@ public:
 		return Result();
 	}
 
-	Result callOnce(Args... args) {
+	Result callOnce(Args... args)
+	{
 		if (m_handler && call_count == 0) {
 			++call_count;
 			return m_handler(static_cast<Args &&>(args)..., m_userdata);

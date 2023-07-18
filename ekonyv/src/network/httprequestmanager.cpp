@@ -65,6 +65,8 @@ void HTTPRequestManager::update()
 		if (m_requests[i].client.connected())
 			m_requests[i].client.stop();
 
+		m_requests[i].end_cb.call();
+
 		m_requests.remove(i);
 	}
 }

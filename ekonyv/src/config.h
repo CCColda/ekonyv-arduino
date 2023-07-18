@@ -3,11 +3,16 @@
 
 #include "salt.h"
 
+#pragma region secret checks
+
 #ifndef EK_PASSWORD_SALT
 #define EK_PASSWORD_SALT ""
 #define EK_PASSWORD_SALT_LEN 0
 #warning "Password salt was not defined, using empty string. Make sure to create salt.h."
 #endif
+
+// secret checks
+#pragma endregion
 
 #pragma region helper macros
 
@@ -49,6 +54,9 @@
 
 #define EK_USERDB_PATH "ekonyv/db/user.txt"
 #define EK_SESSIONDB_PATH "ekonyv/db/session.txt"
+
+#define EK_OSZK_ADDRESS "nektar1.oszk.hu"
+#define EK_OSZK_ENDPOINT "/LVbin/LibriVision"
 
 //! @warning Do not change
 #define EK_MOCK_FILE_SIZE EK_MOCK_FILE_BLOCKS * 512

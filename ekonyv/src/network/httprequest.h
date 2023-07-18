@@ -14,6 +14,7 @@ class HTTPRequest {
 public:
 	decltype(HTTPServerParser::header_parse_cb) header_response_cb;
 	decltype(HTTPServerParser::body_parse_cb) body_parse_cb;
+	Callback<void> end_cb;
 
 public:
 	EthernetClient client;
@@ -27,7 +28,7 @@ public:
 	void addHeader(const char *name, size_t namelen, const char *value, size_t valuelen);
 	void end();
 
-	static HTTPRequest make(HTTP::Method method, const String &host, const String &path);
+	static HTTPRequest make(HTTP::Method method, const String &host, uint16_t port, const String &path);
 };
 
 #endif // !defined(EKONYV_HTTPREQUEST_H)

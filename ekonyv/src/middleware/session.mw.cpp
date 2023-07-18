@@ -2,7 +2,6 @@
 
 #include "../global/global.h"
 #include "../string/to_string.h"
-#include "../string/url.h"
 
 SessionMiddleware::SessionMiddleware(
     const String &path, bool get_user,

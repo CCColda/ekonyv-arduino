@@ -17,4 +17,13 @@ HTTPRequestManager requests = HTTPRequestManager();
 Storage sd = Storage(SDCARD_SS_PIN);
 Databases db = Databases{};
 EventQueue<32> eventqueue = EventQueue<32>();
+
+unsigned long time()
+{
+#if EK_ETHERNET
+	return ntp.getEpochTime();
+#else
+	return millis();
+#endif
+}
 } // namespace global

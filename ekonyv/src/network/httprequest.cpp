@@ -48,13 +48,15 @@ void HTTPRequest::end()
 	client.println();
 }
 
-/* static */ HTTPRequest HTTPRequest::make(HTTP::Method method, const String &host, const String &path)
+/* static */ HTTPRequest HTTPRequest::make(HTTP::Method method, const String &host, uint16_t port, const String &path)
 {
 	HTTPRequest result;
 
-	result.connect(host.c_str(), 80);
+	const auto host_and_port = host + String(':') + String(port, 10);
+
+	result.connect(host.c_str(), port);
 	result.request(method, path.c_str(), path.length());
-	result.addHeader("Host", 4, host.c_str(), host.length());
+	result.addHeader("Host", 4, host_and_port.c_str(), host_and_port.length());
 	result.addHeader("User-Agent", 10, (EK_NAME "/" EK_VERSION), sizeof(EK_NAME "/" EK_VERSION));
 	result.addHeader("Accept", 6, "text/html;charset=UTF-8", 23);
 	result.addHeader("Accept-Encoding", 15, "identity", 8);
