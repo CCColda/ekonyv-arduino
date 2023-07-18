@@ -7,6 +7,12 @@
 
 #include "../middleware/parameter.mw.h"
 
+#include "../arduino/logger.h"
+
+namespace {
+Logger logger = Logger("RLGN");
+}
+
 int LoginRoute::loginHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
@@ -22,6 +28,8 @@ int LoginRoute::loginHandler(const String &path, const Vector<HTTP::ClientHeader
 
 	if (username.value.length() == 0 || username.value.length() > 64 ||
 	    password.value.length() == 0 || password.value.length() > 32) {
+		VERBOSE_LOG(logger, "Failed to log in from ", ip_to_string(client.remoteIP()), ": invalid parameters");
+
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
 		return 0;
 	}
@@ -34,6 +42,8 @@ int LoginRoute::loginHandler(const String &path, const Vector<HTTP::ClientHeader
 	    password_hash);
 
 	if (!loginResult.success) {
+		VERBOSE_LOG(logger, "Failed to log in from ", ip_to_string(client.remoteIP()), " as ", username.value);
+
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_UNAUTHORIZED, client);
 		return 0;
 	}

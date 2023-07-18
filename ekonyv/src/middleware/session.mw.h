@@ -12,6 +12,8 @@ public:
 	    const String &path, bool get_user,
 	    uint32_t parameter_preparation = ParameterMiddleware::NO_PREPARATION);
 
+	int sendInvalidResponse(EthernetClient &client) const;
+
 	inline operator bool() const { return valid && !expired; }
 	inline bool operator!() const { return !valid || expired; }
 

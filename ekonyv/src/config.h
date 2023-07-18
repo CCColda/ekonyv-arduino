@@ -54,9 +54,7 @@
 
 #define EK_USERDB_PATH "ekonyv/db/user.txt"
 #define EK_SESSIONDB_PATH "ekonyv/db/session.txt"
-
-#define EK_OSZK_ADDRESS "nektar1.oszk.hu"
-#define EK_OSZK_ENDPOINT "/LVbin/LibriVision"
+#define EK_BOOKDB_PATH "ekonyv/db/book.txt"
 
 //! @warning Do not change
 #define EK_MOCK_FILE_SIZE EK_MOCK_FILE_BLOCKS * 512

@@ -5,6 +5,7 @@
 
 #include "src/arduino/utility.h"
 
+#include "src/routes/route.book.h"
 #include "src/routes/route.hello.h"
 #include "src/routes/route.login.h"
 #include "src/routes/route.register.h"
@@ -53,6 +54,8 @@ void setup()
 
 	global::db.user.load();
 	global::db.session.load();
+	global::db.book.load();
+
 	global::ntp.begin();
 
 	if (!global::ntp.forceUpdate()) {
@@ -67,6 +70,7 @@ void setup()
 	RegisterRoute::registerRoute(global::server);
 	LoginRoute::registerRoute(global::server);
 	UserHelloRoute::registerRoute(global::server);
+	BookRoute::registerRoute(global::server);
 #endif
 }
 

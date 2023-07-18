@@ -3,28 +3,6 @@
 #include "../string/string.h"
 #include "../string/to_string.h"
 
-namespace {
-unsigned int length_fixed_atoi(const char *str, size_t len)
-{
-	unsigned int result = 0;
-
-	static const char numbers[] = {
-	    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-
-	const auto last_non_digit = Str::findFirstNotOf(str, len, numbers, sizeof(numbers));
-
-	if (last_non_digit == 0)
-		return 0;
-
-	for (size_t i = last_non_digit, exponent = 1;
-	     i > 0;
-	     i -= 1, exponent *= 10)
-		result += exponent * (str[i - 1] - '0');
-
-	return result;
-}
-} // namespace
-
 /* private */ Logger HTTPServerParser::logger = Logger("HTCP");
 
 /* private static */ HTTP::ServerResponseProps HTTPServerParser::extractResponseProps(const char *requestLine, index_t len)
@@ -40,7 +18,7 @@ unsigned int length_fixed_atoi(const char *str, size_t len)
 		return HTTP::ServerResponseProps{400};
 
 	return HTTP::ServerResponseProps{
-	    (index_t)length_fixed_atoi(requestLine + firstSpace + 1, secondSpace - firstSpace - 1)};
+	    Str::fixedAtoi<index_t>(requestLine + firstSpace + 1, secondSpace - firstSpace - 1)};
 }
 
 /* private static */ HTTP::ServerHeaderPair HTTPServerParser::extractHeader(const char *requestLine, index_t len)

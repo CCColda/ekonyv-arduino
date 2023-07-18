@@ -9,8 +9,9 @@
 namespace HTTP {
 enum Method : uint8_t {
 	GET,
+	PUT,
 	POST,
-	UPDATE,
+	DELETE,
 	m_size,
 
 	m_unknown

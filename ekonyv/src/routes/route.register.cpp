@@ -3,10 +3,17 @@
 #include "../global/global.h"
 
 #include "../string/hash.h"
+#include "../string/to_string.h"
 
 #include "../middleware/parameter.mw.h"
 
-int RegisterRoute::requestCodeHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
+namespace {
+Logger logger = Logger("RREG");
+}
+
+namespace RegisterRoute {
+
+int requestCodeHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
 	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
@@ -23,6 +30,8 @@ int RegisterRoute::requestCodeHandler(const String &path, const Vector<HTTP::Cli
 	client.print("state,");
 
 	if (initiation) {
+		VERBOSE_LOG(logger, "Sent code ", String(global::db.reg_req.code.data, 4), " to ", ip_to_string(client.remoteIP()));
+
 		client.println("success");
 
 #if !EK_PRODUCTION
@@ -36,12 +45,13 @@ int RegisterRoute::requestCodeHandler(const String &path, const Vector<HTTP::Cli
 		client.println(global::db.reg_req.expire);
 	}
 	else {
+		VERBOSE_LOG(logger, "Failed generating code for ", ip_to_string(client.remoteIP()), ": code in use");
 		client.println("failure");
 	}
 #endif
 }
 
-int RegisterRoute::registerHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
+int registerHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
 	const auto prep = ParameterMiddleware::preparePath(path);
@@ -62,6 +72,8 @@ int RegisterRoute::registerHandler(const String &path, const Vector<HTTP::Client
 	if (code_param.value.length() != 4 || username.value.length() == 0 ||
 	    username.value.length() > 64 || password.value.length() == 0 ||
 	    password.value.length() > 32) {
+		VERBOSE_LOG(logger, "Sending bad request to ", ip_to_string(client.remoteIP()), ": invalid parameters");
+
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
 		return 0;
 	}
@@ -89,16 +101,19 @@ int RegisterRoute::registerHandler(const String &path, const Vector<HTTP::Client
 		const auto reg_success = global::db.user.tryRegister(username.value.c_str(), username.value.length(), password_hash, User::Flags{1, 1});
 
 		if (reg_success) {
+			logger.log("Successfully registered ", username.value);
 			client.println("success");
 
 			global::db.reg_req.invalidate();
 		}
 		else {
+			logger.warning("Failed to register ", username.value);
 			client.println("failure");
 			client.println("reason,registration_failed");
 		}
 	}
 	else {
+		VERBOSE_LOG(logger, "Failed to register ", username.value, " due to mismatching code.");
 		client.println("failure");
 		client.println("reason,code_invalid");
 	}
@@ -106,8 +121,9 @@ int RegisterRoute::registerHandler(const String &path, const Vector<HTTP::Client
 #endif
 }
 
-void RegisterRoute::registerRoute(HTTPServer &server)
+void registerRoute(HTTPServer &server)
 {
 	server.on(HTTP::POST, "/api/user/req_code", HTTPServer::HandlerBehavior::NONE, requestCodeHandler);
 	server.on(HTTP::POST, "/api/user/register", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, registerHandler);
 }
+} // namespace RegisterRoute

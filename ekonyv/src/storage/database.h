@@ -233,7 +233,7 @@ public:
 		     reversed ? i > 0 : i < m_num_records;
 		     reversed ? --i : ++i) {
 
-			const auto corrected_i = i - 1;
+			const auto corrected_i = reversed ? i - 1 : i;
 
 			auto record = Record();
 			m_file.readNth(corrected_i, &record, sizeof(record));
@@ -261,7 +261,7 @@ public:
 			if (!m_file.is_open())
 				m_file.open();
 
-			const auto corrected_i = i - 1;
+			const auto corrected_i = reversed ? i - 1 : i;
 
 			auto result = Record();
 			m_file.readNth(corrected_i, &result, sizeof(result));

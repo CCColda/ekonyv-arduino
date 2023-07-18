@@ -34,3 +34,16 @@ SessionMiddleware::SessionMiddleware(
 			user = user_result.user;
 	}
 }
+
+int SessionMiddleware::sendInvalidResponse(EthernetClient &client) const
+{
+	HTTPServer::writeStaticHTMLResponse(
+	    HTTPResponse::StaticHTMLResponse{
+	        401,
+	        "Unauthorized",
+	        "401 - Unauthorized",
+	        "Invalid session."},
+	    client);
+
+	return 0;
+}

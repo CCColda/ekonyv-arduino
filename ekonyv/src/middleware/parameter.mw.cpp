@@ -3,6 +3,12 @@
 #include "../string/string.h"
 #include "../string/to_string.h"
 
+#include "../arduino/logger.h"
+
+namespace {
+Logger logger = Logger("PRMW");
+}
+
 ParameterMiddleware::ParameterMiddleware(
     const char *parameter, size_t len,
     const String &path,
@@ -54,6 +60,8 @@ ParameterMiddleware::ParameterMiddleware(
 
 int ParameterMiddleware::sendMissingResponse(EthernetClient &client) const
 {
+	VERBOSE_LOG(logger, "Sending response to ", ip_to_string(client.remoteIP()), " about missing parameter \"", name, '\"');
+
 	const auto description_string = str(
 	    "The value for query parameter \"", name, "\" could not be found.");
 
@@ -64,6 +72,8 @@ int ParameterMiddleware::sendMissingResponse(EthernetClient &client) const
 	        "400 - Bad Request - Parameter invalid",
 	        description_string.c_str()},
 	    client);
+
+	return 0;
 }
 
 /* static */ uint32_t ParameterMiddleware::preparePath(const String &path)

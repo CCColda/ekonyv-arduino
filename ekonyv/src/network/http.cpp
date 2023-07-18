@@ -3,8 +3,9 @@
 namespace HTTP {
 /* extern */ const char *METHOD_MAP[Method::m_size] = {
     "GET",
+    "PUT",
     "POST",
-    "UPDATE"};
+    "DELETE"};
 
 /* extern */ const char *CLIENT_HEADERS[ClientHeader::ch_size] = {
     "Authorization",

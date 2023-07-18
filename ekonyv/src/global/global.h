@@ -11,6 +11,7 @@
 #include "../network/network.h"
 #include "../storage/storage.h"
 
+#include "../database/book.db.h"
 #include "../database/registrationrequest.mem.h"
 #include "../database/session.db.h"
 #include "../database/user.db.h"
@@ -20,6 +21,7 @@ struct Databases {
 	RegistrationRequest reg_req;
 	UserDatabase user;
 	SessionDatabase session;
+	BookDatabase book;
 };
 
 #if EK_ETHERNET

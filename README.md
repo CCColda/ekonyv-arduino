@@ -28,7 +28,7 @@ adatokat és ISBN kódokat kérdez le; egy Android alkalmazás backend-je.
   - [ ] ~~Lekérdezés (3-4 HTTP GET)~~
   - [ ] ~~Ideiglenes tárolás~~
   - [ ] ~~Adat visszaküldése HTTP-n~~
-- [ ] Könyvtárolás API végpont (+ permission-ök)
+- [x] Könyvtárolás API végpont (+ permission-ök)
 - [ ] Lekérdezés API végpont
 - [ ] Törlés, szerkesztés végpont
 - [ ] LCD UI; alapvető adatok kiírása, 2-3 bemenet

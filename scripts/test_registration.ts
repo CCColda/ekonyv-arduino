@@ -74,6 +74,61 @@ async function requestPrivateHelloPage(ip: string, token: string): Promise<boole
 	return true;
 }
 
+async function addBook(ip: string, token: string): Promise<boolean> {
+	const book_data = {
+		id: 0,
+		in: 9789634970323,
+		title: "A teremtők árnyai / Gabriel Mesta ; [ford. Szente Mihály].",
+		authors: "Mesta, Gabriel.",
+		created: 0,
+		storage_id: 1,
+		user_id: 0,
+		flags: "wrb"
+	};
+
+	const book_data_query = Object.entries(book_data).map(([k, v]) => `${k}=${v}`).join('&');
+
+	const resp = await fetch(`http://${ip}:80/api/book?token=${token}&${book_data_query}`, { method: 'PUT' });
+
+	if (resp.status != 200)
+		return false;
+
+	const response_text = await resp.text();
+
+	console.log(response_text);
+	return true;
+}
+
+async function getAllBooks(ip: string, token: string) {
+	const resp = await fetch(`http://${ip}:80/api/book/all?token=${token}`, { method: 'GET' });
+
+	if (resp.status != 200)
+		return false;
+
+	const response_text = await resp.text();
+	console.log(response_text);
+
+	const csv_data = parse(response_text);
+
+	console.log(csv_data);
+	return true;
+}
+
+async function getBookCount(ip: string, token: string) {
+	const resp = await fetch(`http://${ip}:80/api/book/count?token=${token}`, { method: 'GET' });
+
+	if (resp.status != 200)
+		return false;
+
+	const response_text = await resp.text();
+
+	const csv_data = parse(response_text, { fieldsPerRecord: 2 });
+
+	console.log(response_text);
+	console.log(csv_data);
+	return true;
+}
+
 async function main() {
 	const args = flags.parse(Deno.args);
 	const ip = args["ip"] ?? null;
@@ -107,12 +162,34 @@ async function main() {
 	}
 	console.log("Successfully got session token");
 
-	if (!await requestPrivateHelloPage(ip, session)) {
+	if (!await addBook(ip, session)) {
+		console.error("Failed adding book");
+		return;
+	}
+
+	console.log("Successfully added book");
+
+	if (!await getBookCount(ip, session)) {
+		console.error("Failed getting book count");
+		return;
+	}
+
+	console.log("Successfully got book count");
+
+	if (!await getAllBooks(ip, session)) {
+		console.error("Failed getting books");
+		return;
+	}
+
+	console.log("Successfully got all books");
+
+
+	/* if (!await requestPrivateHelloPage(ip, session)) {
 		console.error("Failed getting private page");
 		return;
 	}
 
-	console.log("Getting private page successful");
+	console.log("Getting private page successful"); */
 }
 
 

@@ -29,8 +29,7 @@ public:
 	};
 
 private:
-	uint16_t
-	findNextID();
+	uint16_t findNextID();
 
 public:
 	UserDatabase();
