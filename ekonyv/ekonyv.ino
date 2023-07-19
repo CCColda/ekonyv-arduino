@@ -6,7 +6,7 @@
 #include "src/arduino/utility.h"
 
 #include "src/routes/route.book.h"
-#include "src/routes/route.hello.h"
+#include "src/routes/route.ekonyv.h"
 #include "src/routes/route.login.h"
 #include "src/routes/route.register.h"
 #include "src/routes/route.status.h"
@@ -65,7 +65,7 @@ void setup()
 		logger.log("Time is: ", global::ntp.getFormattedTime(), " (from server " EK_NTP_IP " with " __EK_MACRO_STRING(EK_NTP_OFFSET_S) "s offset; no correction for DST)");
 	}
 
-	HelloRoute::registerRoute(global::server);
+	EKonyvRoute::registerRoute(global::server);
 	StatusRoute::registerRoute(global::server);
 	RegisterRoute::registerRoute(global::server);
 	LoginRoute::registerRoute(global::server);
