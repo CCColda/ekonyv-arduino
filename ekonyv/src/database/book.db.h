@@ -31,16 +31,6 @@ struct Book {
 	uint8_t flags;
 };
 
-enum BookHeaderType : uint8_t {
-	I16,
-	I32,
-	I64,
-	S64,
-	S128,
-	S32,
-	FLAG
-};
-
 enum BookHeader : uint8_t {
 	ID,
 	IN,
@@ -55,9 +45,37 @@ enum BookHeader : uint8_t {
 	bh_size
 };
 
+enum BookSearchType : uint8_t {
+	VALUE,
+	BETWEEN,
+	LIKE,
+	bst_size,
+
+	ANY
+};
+
+enum BookSearchRelation : uint8_t {
+	AND,
+	OR,
+	AND_NOT,
+	OR_NOT,
+	bsr_size
+};
+
+struct BookSearchTerm {
+	BookHeader header;
+	BookSearchType search_type;
+	BookSearchRelation relation;
+
+	String statement;
+};
+
 extern const char *BOOK_HEADERS[bh_size];
 extern uint8_t BOOK_HEADER_LENGTHS[bh_size];
-extern BookHeaderType BOOK_HEADER_TYPES[bh_size];
+
+extern const char *BOOK_SEARCH_TYPES[bst_size];
+extern const char *BOOK_RELATION_TYPES[bsr_size];
+
 extern const char BOOK_FLAGS[8];
 
 class BookDatabase {
@@ -69,27 +87,7 @@ public:
 		Book book;
 	};
 
-	struct SearchTerm {
-		enum Type : uint8_t {
-			VALUE,
-			BETWEEN,
-			LIKE
-		};
-		enum LogicalRelation : uint8_t {
-			AND,
-			OR,
-			AND_NOT,
-			OR_NOT
-		};
-
-		BookHeader header;
-		Type match_type;
-		LogicalRelation relation;
-
-		String statement;
-	};
-
-	using SearchCallback = Callback<void, Book>;
+	using SearchCallback = Callback<void, uint32_t, const Book &>;
 
 public:
 	BookDatabase();
@@ -98,7 +96,7 @@ public:
 
 	uint32_t getLastID();
 	uint32_t add(Book partial_book);
-	void search(const Vector<SearchTerm> &search, SearchCallback callback);
+	void match(const Vector<BookSearchTerm> &search, SearchCallback callback);
 };
 
 #endif // !defined(EKONYV_BOOK_DB_H)

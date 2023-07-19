@@ -18,6 +18,11 @@ public:
 	    const String &path,
 	    uint32_t preparation = NO_PREPARATION);
 
+	ParameterMiddleware(
+	    const String &parameter,
+	    const String &path,
+	    uint32_t preparation = NO_PREPARATION);
+
 	int sendMissingResponse(EthernetClient &client) const;
 
 	inline operator bool() const { return valid; }

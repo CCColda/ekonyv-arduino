@@ -4,30 +4,28 @@
 template <typename Result, typename... Args>
 class Callback {
 public:
-	using RawPtr = Result (*)(Args..., void *);
-
 	template <typename T>
-	using Ptr = Result (*)(Args..., const T &);
+	using Ptr = Result (*)(Args..., T);
 
 private:
 	void *m_userdata;
 	uint32_t m_userdata_size;
-	RawPtr m_handler;
+	Ptr<void *> m_handler;
 
 public:
 	uint16_t call_count;
 
 private:
 	template <typename T>
-	struct DelegateData {
-		Ptr<T> fn;
+	struct DynamicDelegateData {
+		Ptr<const T &> fn;
 		T data;
 	};
 
 	template <typename T>
-	static Result delegateHandler(Args &&...args, void *userdata)
+	static Result dynamicDelegateHandler(Args &&...args, void *userdata)
 	{
-		auto *const data = reinterpret_cast<DelegateData<T> *>(userdata);
+		auto *const data = reinterpret_cast<DynamicDelegateData<T> *>(userdata);
 
 		return data->fn(
 		    static_cast<Args &&>(args)...,
@@ -83,22 +81,24 @@ public:
 		}
 	}
 
-	void set(RawPtr fn, void *userdata)
+	template <typename T>
+	void set(Ptr<T *> fn, T *userdata)
 	{
-		m_handler = fn;
+		// since sizeof(T*) == sizeof(void*), this cast is safe
+		m_handler = reinterpret_cast<Ptr<void *>>(fn);
 		m_userdata = userdata;
 		m_userdata_size = 0;
 	}
 
 	template <typename T>
-	void set(Ptr<T> fn, const T &userdata)
+	void set(Ptr<const T &> fn, const T &userdata)
 	{
-		m_handler = delegateHandler<T>;
+		m_handler = dynamicDelegateHandler<T>;
 
-		m_userdata = new byte[sizeof(DelegateData<T>)];
-		m_userdata_size = sizeof(DelegateData<T>);
+		m_userdata = new byte[sizeof(DynamicDelegateData<T>)];
+		m_userdata_size = sizeof(DynamicDelegateData<T>);
 
-		auto *const userdata_as_delegate_data = reinterpret_cast<DelegateData<T> *>(m_userdata);
+		auto *const userdata_as_delegate_data = reinterpret_cast<DynamicDelegateData<T> *>(m_userdata);
 		userdata_as_delegate_data->fn = fn;
 		userdata_as_delegate_data->data = userdata;
 	}

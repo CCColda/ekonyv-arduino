@@ -4,6 +4,7 @@
 
 #include "../string/hash.h"
 #include "../string/to_string.h"
+#include "../string/url.h"
 
 #include "../middleware/parameter.mw.h"
 
@@ -69,9 +70,12 @@ int registerHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &he
 	if (!password)
 		return password.sendMissingResponse(client);
 
-	if (code_param.value.length() != 4 || username.value.length() == 0 ||
-	    username.value.length() > 64 || password.value.length() == 0 ||
-	    password.value.length() > 32) {
+	const auto username_decoded = Str::urlDecode(username.value.c_str(), username.value.length());
+	const auto password_decoded = Str::urlDecode(password.value.c_str(), password.value.length());
+
+	if (code_param.value.length() != 4 || username_decoded.length() == 0 ||
+	    username_decoded.length() > 64 || password_decoded.length() == 0 ||
+	    password_decoded.length() > 32) {
 		VERBOSE_LOG(logger, "Sending bad request to ", ip_to_string(client.remoteIP()), ": invalid parameters");
 
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
@@ -96,24 +100,24 @@ int registerHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &he
 
 	if (code_valid) {
 		FixedBuffer<32> password_hash;
-		Str::hashAndSaltString(password.value, password_hash);
+		Str::hashAndSaltString(password_decoded, password_hash);
 
-		const auto reg_success = global::db.user.tryRegister(username.value.c_str(), username.value.length(), password_hash, User::Flags{1, 1});
+		const auto reg_success = global::db.user.tryRegister(username_decoded.c_str(), username_decoded.length(), password_hash, User::Flags{1, 1});
 
 		if (reg_success) {
-			logger.log("Successfully registered ", username.value);
+			logger.log("Successfully registered ", username_decoded);
 			client.println("success");
 
 			global::db.reg_req.invalidate();
 		}
 		else {
-			logger.warning("Failed to register ", username.value);
+			logger.warning("Failed to register ", username_decoded);
 			client.println("failure");
 			client.println("reason,registration_failed");
 		}
 	}
 	else {
-		VERBOSE_LOG(logger, "Failed to register ", username.value, " due to mismatching code.");
+		VERBOSE_LOG(logger, "Failed to register ", username_decoded, " due to mismatching code.");
 		client.println("failure");
 		client.println("reason,code_invalid");
 	}

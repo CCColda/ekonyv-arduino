@@ -4,6 +4,7 @@
 
 #include "../string/hash.h"
 #include "../string/to_string.h"
+#include "../string/url.h"
 
 #include "../middleware/parameter.mw.h"
 
@@ -26,8 +27,11 @@ int LoginRoute::loginHandler(const String &path, const Vector<HTTP::ClientHeader
 	if (!password)
 		return password.sendMissingResponse(client);
 
-	if (username.value.length() == 0 || username.value.length() > 64 ||
-	    password.value.length() == 0 || password.value.length() > 32) {
+	const auto username_decoded = Str::urlDecode(username.value.c_str(), username.value.length());
+	const auto password_decoded = Str::urlDecode(password.value.c_str(), password.value.length());
+
+	if (username_decoded.length() == 0 || username_decoded.length() > 64 ||
+	    password_decoded.length() == 0 || password_decoded.length() > 32) {
 		VERBOSE_LOG(logger, "Failed to log in from ", ip_to_string(client.remoteIP()), ": invalid parameters");
 
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_BAD_REQUEST, client);
@@ -35,14 +39,14 @@ int LoginRoute::loginHandler(const String &path, const Vector<HTTP::ClientHeader
 	}
 
 	FixedBuffer<32> password_hash;
-	Str::hashAndSaltString(password.value, password_hash);
+	Str::hashAndSaltString(password_decoded, password_hash);
 
 	const auto loginResult = global::db.user.tryLogin(
-	    username.value.c_str(), username.value.length(),
+	    username_decoded.c_str(), username_decoded.length(),
 	    password_hash);
 
 	if (!loginResult.success) {
-		VERBOSE_LOG(logger, "Failed to log in from ", ip_to_string(client.remoteIP()), " as ", username.value);
+		VERBOSE_LOG(logger, "Failed to log in from ", ip_to_string(client.remoteIP()), " as \"", username_decoded, '"');
 
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_UNAUTHORIZED, client);
 		return 0;

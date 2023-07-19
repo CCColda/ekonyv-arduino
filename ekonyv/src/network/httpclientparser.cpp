@@ -8,7 +8,7 @@
 /* private static */ HTTP::ClientRequestProps HTTPClientParser::extractRequestProps(const char *requestLine, index_t len)
 {
 	const auto firstSpace = Str::find(requestLine, len, ' ');
-	const auto secondSpace = Str::find(requestLine, len, ' ', firstSpace + 1);
+	const auto secondSpace = Str::findLast(requestLine, len, ' ');
 
 	if (firstSpace == Str::NOT_FOUND || secondSpace == Str::NOT_FOUND)
 		return HTTP::ClientRequestProps{HTTP::Method::m_unknown, String()};

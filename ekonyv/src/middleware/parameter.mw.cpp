@@ -58,6 +58,11 @@ ParameterMiddleware::ParameterMiddleware(
 	        : next_param_or_end - param_value_start);
 }
 
+ParameterMiddleware::ParameterMiddleware(
+    const String &parameter, const String &path,
+    uint32_t prep)
+    : ParameterMiddleware(parameter.c_str(), parameter.length(), path, prep) {}
+
 int ParameterMiddleware::sendMissingResponse(EthernetClient &client) const
 {
 	VERBOSE_LOG(logger, "Sending response to ", ip_to_string(client.remoteIP()), " about missing parameter \"", name, '\"');

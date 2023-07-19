@@ -9,6 +9,43 @@ const TEST_CREDS = {
 	password: "no"
 };
 
+type BookData = {
+	id?: number,
+	in: number,
+	title: string,
+	authors: string,
+	attributes: string,
+	published: string,
+	created?: number,
+	storage_id: number,
+	user_id?: number,
+	flags: string
+};
+
+const books: BookData[] = [{
+	id: 0,
+	in: 9789634970323,
+	title: "A teremtők árnyai / Gabriel Mesta ; [ford. Szente Mihály].",
+	authors: "Mesta, Gabriel.",
+	created: 0,
+	storage_id: 1,
+	user_id: 0,
+	attributes: "",
+	published: "",
+	flags: "wrb"
+}, {
+	id: 0,
+	in: 9789633245187,
+	title: "Legendás állatok és megfigyelésük / J. K. Rowling, Göthe Salmander ; [ford. Tóth Tamás Boldizsár].",
+	authors: "Rowling, J. K. (1965-).",
+	attributes: "138, [6] p. : ill. ; 21 cm",
+	published: "[Budapest] : Animus, 2021.",
+	created: 0,
+	storage_id: 1,
+	user_id: 0,
+	flags: "wrb"
+}];
+
 async function requestCode(ip: string): Promise<string | null> {
 	const resp = await fetch(`http://${ip}:80/api/user/req_code`, { method: 'POST' });
 
@@ -74,18 +111,7 @@ async function requestPrivateHelloPage(ip: string, token: string): Promise<boole
 	return true;
 }
 
-async function addBook(ip: string, token: string): Promise<boolean> {
-	const book_data = {
-		id: 0,
-		in: 9789634970323,
-		title: "A teremtők árnyai / Gabriel Mesta ; [ford. Szente Mihály].",
-		authors: "Mesta, Gabriel.",
-		created: 0,
-		storage_id: 1,
-		user_id: 0,
-		flags: "wrb"
-	};
-
+async function addBook(ip: string, token: string, book_data: BookData): Promise<boolean> {
 	const book_data_query = Object.entries(book_data).map(([k, v]) => `${k}=${v}`).join('&');
 
 	const resp = await fetch(`http://${ip}:80/api/book?token=${token}&${book_data_query}`, { method: 'PUT' });
@@ -162,12 +188,14 @@ async function main() {
 	}
 	console.log("Successfully got session token");
 
-	if (!await addBook(ip, session)) {
-		console.error("Failed adding book");
-		return;
-	}
+	for (const book of books) {
+		if (!await addBook(ip, session, book)) {
+			console.error("Failed adding book");
+			return;
+		}
 
-	console.log("Successfully added book");
+		console.log("Successfully added book");
+	}
 
 	if (!await getBookCount(ip, session)) {
 		console.error("Failed getting book count");
