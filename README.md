@@ -30,7 +30,8 @@ adatokat és ISBN kódokat kérdez le; egy Android alkalmazás backend-je.
   - [ ] ~~Adat visszaküldése HTTP-n~~
 - [x] Könyvtárolás API végpont (+ permission-ök)
 - [x] Lekérdezés API végpont
-- [ ] Törlés, szerkesztés végpont
+- [x] Szerkesztés végpont
+- [ ] Törlés végpont
 - [ ] LCD UI; alapvető adatok kiírása, 2-3 bemenet
   - [ ] IP-cím kiírása az LCD-re
   - [ ] API-kulcs a felhasználóknak LCD-s bejelentkeztetéssel

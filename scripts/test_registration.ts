@@ -114,7 +114,7 @@ async function requestPrivateHelloPage(ip: string, token: string): Promise<boole
 async function addBook(ip: string, token: string, book_data: BookData): Promise<boolean> {
 	const book_data_query = Object.entries(book_data).map(([k, v]) => `${k}=${v}`).join('&');
 
-	const resp = await fetch(`http://${ip}:80/api/book?token=${token}&${book_data_query}`, { method: 'PUT' });
+	const resp = await fetch(`http://${ip}:80/api/book?token=${token}&${book_data_query}`, { method: 'POST' });
 
 	if (resp.status != 200)
 		return false;

@@ -85,7 +85,7 @@ uint8_t getFieldSize(const Book &book, BookHeader header)
 		case S64: {
 			switch (header) {
 				case AUTHORS:
-					return book.author_len;
+					return book.authors_len;
 				default:
 					return 0;
 			}
@@ -95,7 +95,7 @@ uint8_t getFieldSize(const Book &book, BookHeader header)
 				case PUBLISHED:
 					return book.published_len;
 				case ATTRIBUTES:
-					return book.attrib_len;
+					return book.attributes_len;
 				default:
 					return 0;
 			}
@@ -203,6 +203,24 @@ void search_iterator(uint32_t index, const Book &book, SearchIteratorData *data)
 	if (match)
 		data->cb.call(index, book);
 }
+
+bool similar_search(uint32_t index, const Book &book, const Book *compare_book)
+{
+	if (book.in == compare_book->in)
+		return true;
+
+	if (book.title_len == compare_book->title_len && book.authors_len == compare_book->authors_len)
+		if (Str::compare(book.title, compare_book->title, book.title_len) &&
+		    Str::compare(book.authors, compare_book->authors, book.authors_len))
+			return true;
+
+	return false;
+}
+
+bool id_search(uint32_t idx, const Book &book, uint32_t id)
+{
+	return book.id == id;
+}
 } // namespace
 
 /* extern */ const char *BOOK_HEADERS[] = {
@@ -266,10 +284,19 @@ uint32_t BookDatabase::getLastID()
 	return db.at(db.size() - 1).value.id;
 }
 
-uint32_t BookDatabase::add(Book partial_book)
+void BookDatabase::match(const Vector<BookSearchTerm> &search, SearchCallback callback)
+{
+	auto data = SearchIteratorData{
+	    search,
+	    callback};
+
+	db.iterate(false, 0, db.size(), false, search_iterator, &data);
+}
+
+uint32_t BookDatabase::add(const Book &partial_book)
 {
 	if (partial_book.title_len == 0 ||
-	    partial_book.author_len == 0)
+	    partial_book.authors_len == 0)
 		return 0;
 
 	const auto id = getLastID() + 1;
@@ -284,11 +311,12 @@ uint32_t BookDatabase::add(Book partial_book)
 	return id;
 }
 
-void BookDatabase::match(const Vector<BookSearchTerm> &search, SearchCallback callback)
+decltype(BookDatabase::db)::QueryResult BookDatabase::searchSimilarBook(const Book &partial_book)
 {
-	auto data = SearchIteratorData{
-	    search,
-	    callback};
+	return db.search(0, true, similar_search, &partial_book);
+}
 
-	db.iterate(false, 0, db.size(), false, search_iterator, &data);
+decltype(BookDatabase::db)::QueryResult BookDatabase::getByID(uint32_t id)
+{
+	return db.search(0, true, id_search, id);
 }

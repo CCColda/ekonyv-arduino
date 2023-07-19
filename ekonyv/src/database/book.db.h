@@ -15,9 +15,9 @@ struct Book {
 	uint64_t in;
 
 	uint8_t title_len;
-	uint8_t author_len;
+	uint8_t authors_len;
 	uint8_t published_len;
-	uint8_t attrib_len;
+	uint8_t attributes_len;
 
 	char title[128];
 	char authors[64];
@@ -95,8 +95,11 @@ public:
 	void save();
 
 	uint32_t getLastID();
-	uint32_t add(Book partial_book);
 	void match(const Vector<BookSearchTerm> &search, SearchCallback callback);
+
+	uint32_t add(const Book &partial_book);
+	decltype(db)::QueryResult searchSimilarBook(const Book &partial_book);
+	decltype(db)::QueryResult getByID(uint32_t id);
 };
 
 #endif // !defined(EKONYV_BOOK_DB_H)

@@ -13,6 +13,7 @@ public:
 	    uint32_t parameter_preparation = ParameterMiddleware::NO_PREPARATION);
 
 	int sendInvalidResponse(EthernetClient &client) const;
+	int sendUnauthorizedResponse(EthernetClient &client) const;
 
 	inline operator bool() const { return valid && !expired; }
 	inline bool operator!() const { return !valid || expired; }

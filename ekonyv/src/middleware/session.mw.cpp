@@ -47,3 +47,16 @@ int SessionMiddleware::sendInvalidResponse(EthernetClient &client) const
 
 	return 0;
 }
+
+int SessionMiddleware::sendUnauthorizedResponse(EthernetClient &client) const
+{
+	HTTPServer::writeStaticHTMLResponse(
+	    HTTPResponse::StaticHTMLResponse{
+	        401,
+	        "Unauthorized",
+	        "401 - Unauthorized",
+	        "Insufficient permissions."},
+	    client);
+
+	return 0;
+}

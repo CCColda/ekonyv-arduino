@@ -9,12 +9,12 @@
 
 namespace {
 
-struct BookFromParametersOptions {
-	uint8_t ignore_id : 1;
-	uint8_t ignore_user_id : 1;
+struct SendIfPublicArgs {
+	EthernetClient *client;
+	uint16_t user_id;
 };
 
-Book getBookFromParameters(const String &path, uint32_t prep, BookFromParametersOptions opts = {0, 0})
+Book getBookFromParameters(const String &path, uint32_t prep)
 {
 	auto result = Book();
 
@@ -25,16 +25,9 @@ Book getBookFromParameters(const String &path, uint32_t prep, BookFromParameters
 	const auto attributes = ParameterMiddleware(BOOK_HEADERS[BookHeader::ATTRIBUTES], BOOK_HEADER_LENGTHS[BookHeader::ATTRIBUTES], path, prep);
 	const auto storage_id = ParameterMiddleware(BOOK_HEADERS[BookHeader::STORAGE_ID], BOOK_HEADER_LENGTHS[BookHeader::STORAGE_ID], path, prep);
 	const auto flags = ParameterMiddleware(BOOK_HEADERS[BookHeader::FLAGS], BOOK_HEADER_LENGTHS[BookHeader::FLAGS], path, prep);
+	const auto id = ParameterMiddleware(BOOK_HEADERS[BookHeader::ID], BOOK_HEADER_LENGTHS[BookHeader::ID], path, prep);
 
-	if (!opts.ignore_id) {
-		const auto id = ParameterMiddleware(BOOK_HEADERS[BookHeader::ID], BOOK_HEADER_LENGTHS[BookHeader::ID], path, prep);
-		result.id = id ? Str::fixedAtoi<uint32_t>(id.value.c_str(), id.value.length()) : 0;
-	}
-
-	if (!opts.ignore_user_id) {
-		const auto user_id = ParameterMiddleware(BOOK_HEADERS[BookHeader::USER_ID], BOOK_HEADER_LENGTHS[BookHeader::USER_ID], path, prep);
-		result.user_id = user_id ? Str::fixedAtoi<uint16_t>(user_id.value.c_str(), user_id.value.length()) : 0;
-	}
+	result.id = id ? Str::fixedAtoi<uint32_t>(id.value.c_str(), id.value.length()) : 0;
 
 	result.in = in ? Str::fixedAtoi<uint64_t>(in.value.c_str(), in.value.length()) : 0;
 	result.storage_id = storage_id ? Str::fixedAtoi<uint16_t>(storage_id.value.c_str(), storage_id.value.length()) : 0;
@@ -49,8 +42,8 @@ Book getBookFromParameters(const String &path, uint32_t prep, BookFromParameters
 	if (authors) {
 		const auto decoded = Str::urlDecode(authors.value.c_str(), authors.value.length());
 
-		result.author_len = min(decoded.length(), sizeof(Book::authors));
-		memcpy(result.authors, decoded.c_str(), result.author_len);
+		result.authors_len = min(decoded.length(), sizeof(Book::authors));
+		memcpy(result.authors, decoded.c_str(), result.authors_len);
 	}
 
 	if (published) {
@@ -63,8 +56,8 @@ Book getBookFromParameters(const String &path, uint32_t prep, BookFromParameters
 	if (attributes) {
 		const auto decoded = Str::urlDecode(attributes.value.c_str(), attributes.value.length());
 
-		result.attrib_len = min(decoded.length(), sizeof(Book::attributes));
-		memcpy(result.attributes, decoded.c_str(), result.attrib_len);
+		result.attributes_len = min(decoded.length(), sizeof(Book::attributes));
+		memcpy(result.attributes, decoded.c_str(), result.attributes_len);
 	}
 
 	if (flags)
@@ -142,11 +135,11 @@ void sendBook(uint32_t i, const Book &book, EthernetClient *client)
 	client->print(",\"");
 	client->write(book.title, book.title_len);
 	client->print("\",\"");
-	client->write(book.authors, book.author_len);
+	client->write(book.authors, book.authors_len);
 	client->print("\",\"");
 	client->write(book.published, book.published_len);
 	client->print("\",\"");
-	client->write(book.attributes, book.attrib_len);
+	client->write(book.attributes, book.attributes_len);
 	client->print("\",");
 	client->print(book.created);
 	client->print(',');
@@ -165,10 +158,16 @@ void sendBook(uint32_t i, const Book &book, EthernetClient *client)
 	client->println();
 }
 
+void sendBookIfPublic(uint32_t i, const Book &book, SendIfPublicArgs *args)
+{
+	if (!(book.user_id != args->user_id && (book.flags & Book::PUBLICLY_READABLE) != 0))
+		sendBook(i, book, args->client);
+}
+
 } // namespace
 
 namespace BookRoute {
-int putBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
+int postBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 	const auto prep = ParameterMiddleware::preparePath(path);
 	const auto session = SessionMiddleware(path, true, prep);
@@ -176,32 +175,99 @@ int putBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &hea
 	if (!session)
 		return session.sendInvalidResponse(client);
 
-	BookFromParametersOptions opts;
-	opts.ignore_id = 1;
-	opts.ignore_user_id = 1;
-
-	Book book = getBookFromParameters(path, prep, opts);
-
-	book.user_id = session.user_id;
-
-	const auto id = global::db.book.add(book);
-
-	if (id == 0) {
-		HTTPServer::writeHTTPHeaders(400, "Bad Request", "text/csv", client);
+	Book book = getBookFromParameters(path, prep);
+	const auto similar_book = global::db.book.searchSimilarBook(book);
+	if (similar_book.state == QueryState::SUCCESS) {
+		HTTPServer::writeStaticHTMLResponse(
+		    HTTPResponse::StaticHTMLResponse{
+		        400, "Bad Request",
+		        "400 - Bad Request",
+		        "A similar book already exists."},
+		    client);
+		return 0;
 	}
-	else {
+
+	if (book.id == 0) {
+		book.user_id = session.user_id;
+
+		const auto id = global::db.book.add(book);
+
+		if (id == 0) {
+			HTTPServer::writeStaticHTMLResponse(
+			    HTTPResponse::StaticHTMLResponse{
+			        400, "Bad Request",
+			        "400 - Bad Request",
+			        "Failed adding book."},
+			    client);
+			return 0;
+		}
+
 		HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
 		client.println("key,value");
+		client.println("state,success");
 		client.print("id,");
 		client.println(id);
+
+		return 0;
+	}
+	else {
+		const auto book_info = global::db.book.getByID(book.id);
+
+		if (book_info.state == QueryState::ERROR) {
+			HTTPServer::writeStaticHTMLResponse(
+			    HTTPResponse::StaticHTMLResponse{
+			        400, "Bad Request",
+			        "400 - Bad Request",
+			        "The book with the given ID doesn't exist."},
+			    client);
+			return 0;
+		}
+
+		if (book_info.value.user_id != session.user_id && (book_info.value.flags & Book::PUBLICLY_WRITABLE) != 0) {
+			HTTPServer::writeStaticHTMLResponse(
+			    HTTPResponse::StaticHTMLResponse{
+			        400, "Bad Request",
+			        "400 - Bad Request",
+			        "The book must be edited by its uploader."},
+			    client);
+			return 0;
+		}
+
+		auto result_book = book_info.value;
+
+		result_book.flags = book.flags;
+
+#define EK_COPY_STR_IF_VALID(s)                             \
+	if (book.s##_len != 0) {                                \
+		result_book.s##_len = book.s##_len;                 \
+		memcpy(result_book.s, book.s, result_book.s##_len); \
 	}
 
-	return 0;
-}
+#define EK_COPY_NUM_IF_VALID(n) \
+	if (book.n != 0)            \
+		result_book.n = book.n;
 
-int postBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
-{
-	return 0;
+		EK_COPY_STR_IF_VALID(title);
+		EK_COPY_STR_IF_VALID(authors);
+		EK_COPY_STR_IF_VALID(published);
+		EK_COPY_STR_IF_VALID(attributes);
+
+		EK_COPY_NUM_IF_VALID(storage_id);
+		EK_COPY_NUM_IF_VALID(in);
+
+#undef EK_COPY_STR_IF_VALID
+#undef EK_COPY_NUM_IF_VALID
+
+		global::db.book.db.modify(book_info.index, result_book);
+
+		HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
+		client.println("key,value");
+		client.println("state,success");
+		client.print("id,");
+		client.println(result_book.id);
+
+		return 0;
+	}
 }
 
 int deleteBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
@@ -245,7 +311,8 @@ int getAllBooksHandler(const String &path, const Vector<HTTP::ClientHeaderPair> 
 	}
 	client.println();
 
-	global::db.book.db.iterate(false, 0, global::db.book.db.size(), false, sendBook, &client);
+	SendIfPublicArgs args = {&client, session.user_id};
+	global::db.book.db.iterate(false, 0, global::db.book.db.size(), false, sendBookIfPublic, &args);
 
 	return 0;
 }
@@ -299,8 +366,10 @@ int getBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &hea
 	}
 	client.println();
 
+	SendIfPublicArgs args = {&client, session.user_id};
+
 	BookDatabase::SearchCallback cb;
-	cb.set(sendBook, &client);
+	cb.set(sendBookIfPublic, &args);
 	global::db.book.match(terms, cb);
 
 	return 0;
@@ -312,10 +381,9 @@ void registerRoute(HTTPServer &server)
 	server.on(HTTP::GET, "/api/book/all", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, getAllBooksHandler);
 
 	server.on(HTTP::GET, "/api/book", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, getBookHandler);
-	server.on(HTTP::PUT, "/api/book", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, putBookHandler);
+	server.on(HTTP::POST, "/api/book", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, postBookHandler);
 
-	/* server.on(HTTP::POST, "/api/book", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, getBookHandler);
-	server.on(HTTP::DELETE, "/api/book", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, getBookHandler); */
+	server.on(HTTP::DELETE, "/api/book", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, getBookHandler);
 }
 
 } // namespace BookRoute
