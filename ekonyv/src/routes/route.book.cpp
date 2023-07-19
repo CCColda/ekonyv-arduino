@@ -214,22 +214,12 @@ int postBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &he
 		const auto book_info = global::db.book.getByID(book.id);
 
 		if (book_info.state == QueryState::ERROR) {
-			HTTPServer::writeStaticHTMLResponse(
-			    HTTPResponse::StaticHTMLResponse{
-			        400, "Bad Request",
-			        "400 - Bad Request",
-			        "The book with the given ID doesn't exist."},
-			    client);
+			HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_INVALID_BOOK, client);
 			return 0;
 		}
 
 		if (book_info.value.user_id != session.user_id && (book_info.value.flags & Book::PUBLICLY_WRITABLE) != 0) {
-			HTTPServer::writeStaticHTMLResponse(
-			    HTTPResponse::StaticHTMLResponse{
-			        400, "Bad Request",
-			        "400 - Bad Request",
-			        "The book must be edited by its uploader."},
-			    client);
+			HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_BOOK_WRITE_PROTECTED, client);
 			return 0;
 		}
 
@@ -272,6 +262,35 @@ int postBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &he
 
 int deleteBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
+	const auto prep = ParameterMiddleware::preparePath(path);
+	const auto session = SessionMiddleware(path, true, prep);
+
+	if (!session)
+		return session.sendInvalidResponse(client);
+
+	const auto id = ParameterMiddleware("id", 2, path, prep);
+
+	if (!id)
+		return id.sendMissingResponse(client);
+
+	const auto stored_book = global::db.book.getByID(Str::fixedAtoi<uint16_t>(id.value.c_str(), id.value.length()));
+
+	if (stored_book.state == QueryState::ERROR) {
+		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_INVALID_BOOK, client);
+		return 0;
+	}
+
+	if (stored_book.value.user_id != session.user_id && (stored_book.value.flags & Book::PUBLICLY_WRITABLE) != 0) {
+		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_BOOK_WRITE_PROTECTED, client);
+		return 0;
+	}
+
+	global::db.book.db.remove(stored_book.index);
+
+	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
+	client.println("key,value");
+	client.println("state,success");
+
 	return 0;
 }
 
@@ -383,7 +402,7 @@ void registerRoute(HTTPServer &server)
 	server.on(HTTP::GET, "/api/book", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, getBookHandler);
 	server.on(HTTP::POST, "/api/book", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, postBookHandler);
 
-	server.on(HTTP::DELETE, "/api/book", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, getBookHandler);
+	server.on(HTTP::DELETE, "/api/book", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, deleteBookHandler);
 }
 
 } // namespace BookRoute

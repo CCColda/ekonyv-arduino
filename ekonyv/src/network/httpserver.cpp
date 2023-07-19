@@ -106,10 +106,13 @@ void HTTPServer::update()
 	client.print(' ');
 	client.println(status_message);
 
-	client.print("Content-Type: ");
+	client.print("Server:");
+	client.println(EK_NAME);
+
+	client.print("Content-Type:");
 	client.println(content_type);
 
-	client.println("Connection: close");
+	client.println("Connection:close");
 	client.println();
 }
 

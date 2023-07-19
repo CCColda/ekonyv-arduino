@@ -28,11 +28,21 @@ const StaticHTMLResponse HTML_UNAUTHORIZED = {
     "401 - Unauthorized",
     "Invalid credentials."};
 
-const StaticHTMLResponse HTMP_NOT_IMPLEMENTED = {
+const StaticHTMLResponse HTML_NOT_IMPLEMENTED = {
     501,
     "Unimplemented",
     "501 - Unimplemented",
     "The endpoint you provided was registered but not implemented."};
+
+const StaticHTMLResponse HTML_INVALID_BOOK = HTTPResponse::StaticHTMLResponse{
+    400, "Bad Request",
+    "400 - Bad Request",
+    "The book with the given ID doesn't exist."};
+
+const StaticHTMLResponse HTML_BOOK_WRITE_PROTECTED = HTTPResponse::StaticHTMLResponse{
+    400, "Bad Request",
+    "400 - Bad Request",
+    "The book must be edited by its uploader."};
 } // namespace HTTPResponse
 
 #endif // !defined(EKONYV_HTTP_RESPONSE_H)

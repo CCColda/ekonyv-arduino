@@ -32,7 +32,7 @@
 #define EK_PRODUCTION 0
 #define EK_SD 0
 #define EK_ETHERNET 1
-#define EK_VERBOSE_LOGGING 1
+#define EK_VERBOSE_LOGGING 0
 
 #define EK_SERVER_PORT 80
 
