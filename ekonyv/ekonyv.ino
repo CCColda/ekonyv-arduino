@@ -20,7 +20,10 @@ void setup()
 {
 	pinMode(EK_HANGING_ANALOG_PIN, INPUT);
 
+#if EK_SERIAL
 	Serial.begin(9600);
+
+#if EK_SERIAL_INPUT_FOR_START
 	while (!Serial)
 		delay(5);
 
@@ -33,6 +36,8 @@ void setup()
 		go_string.trim();
 		go_string.toLowerCase();
 	} while (go_string != "go");
+#endif
+#endif
 
 	if (!global::sd.init()) {
 		logger.error("Failed initializing SD card");

@@ -30,6 +30,8 @@
 #define EK_NAME "EKonyv"
 
 #define EK_PRODUCTION 0
+#define EK_SERIAL 1
+#define EK_SERIAL_INPUT_FOR_START 0
 #define EK_SD 0
 #define EK_ETHERNET 1
 #define EK_VERBOSE_LOGGING 0
