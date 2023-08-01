@@ -5,9 +5,11 @@ adatokat és ISBN kódokat kérdez le; egy Android alkalmazás backend-je.
 
 ## Kábelezés
 
-![](https://docs.arduino.cc/static/e111efcef9f69d012577319bcce2f67c/4ef49/MKRETH_T1_IMG02.png)
+1. MKR Zero és MKR ETH Shield csatlakoztatása:\
+![](img/step1_single.png)
 
-![](https://docs.arduino.cc/static/afbe069c7e55e2a6b795727f75a03252/4ef49/MKRETH_T1_IMG03.png)
+2. MKR modul és 16x2 LCD összekötése:\
+![](img/step2_single.png)
 
 ## Roadmap
 
@@ -33,9 +35,9 @@ adatokat és ISBN kódokat kérdez le; egy Android alkalmazás backend-je.
   - [x] Lekérdezés API végpont
   - [x] Szerkesztés végpont
   - [x] Törlés végpont
-- [ ] Felhasználónév végpont
-  - [ ] Lekérdezés
-  - [ ] Változtatás
-- [ ] LCD UI; alapvető adatok kiírása, 2-3 bemenet
-  - [ ] IP-cím kiírása az LCD-re
-  - [ ] API-kulcs a felhasználóknak LCD-s bejelentkeztetéssel
+- [x] Felhasználónév végpont
+  - [x] Lekérdezés
+  - [x] Változtatás
+- [x] LCD UI; alapvető adatok kiírása, ~~2-3 bemenet~~
+  - [x] IP-cím kiírása az LCD-re
+  - [x] API-kulcs a felhasználóknak LCD-s bejelentkeztetéssel
