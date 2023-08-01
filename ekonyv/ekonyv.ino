@@ -43,7 +43,7 @@ void setup()
 		logger.error("Failed initializing SD card");
 	}
 	else {
-		logger.log(String("SD Card connected; ") + Storage::infoToString(global::sd.getInfo()));
+		logger.log("SD Card connected; ", Storage::infoToString(global::sd.getInfo()));
 	}
 
 #if EK_ETHERNET

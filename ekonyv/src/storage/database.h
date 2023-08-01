@@ -111,7 +111,7 @@ public:
 			switch (update.type) {
 				case UpdateType::ADD: {
 					VERBOSE_LOG(logger, "Processing add command");
-					m_file.append((void *)&update.data); // todo const cast
+					m_file.append(const_cast<Record *>(&update.data));
 					++m_file_num_records;
 					break;
 				}
@@ -133,7 +133,7 @@ public:
 
 					VERBOSE_LOG(logger, "Processing modify command at ", update.n);
 
-					m_file.modify(correctedN, (void *)&update.data); // todo const cast
+					m_file.modify(correctedN, const_cast<Record *>(&update.data));
 					break;
 				}
 			}

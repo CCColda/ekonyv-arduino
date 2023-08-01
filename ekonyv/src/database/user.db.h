@@ -4,20 +4,33 @@
 #include "../storage/database.h"
 #include "../types/fixedbuffer.h"
 
+#include "search.h"
+
+#include "../types/callback.h"
+
 struct User {
-	struct Flags {
-		uint8_t can_write : 1;
-		uint8_t admin : 1;
-	};
+	constexpr static const uint8_t CAN_WRITE = 0b00000001;
+	constexpr static const uint8_t IS_ADMIN = 0b00000010;
 
 	uint16_t id;
-	Flags flags;
+	uint8_t flags;
 	uint8_t username_len;
 	char username[64];
 	FixedBuffer<32> password_hash;
 
 	constexpr static uint16_t INVALID_ID = 0;
 };
+
+enum UserHeader : uint8_t {
+	UH_ID,
+	UH_FLAGS,
+	UH_USERNAME,
+	uh_size
+};
+
+extern const char *USER_HEADERS[uh_size];
+extern uint8_t USER_HEADER_LENGTHS[uh_size];
+extern const char USER_FLAGS[8];
 
 class UserDatabase {
 public:
@@ -28,24 +41,27 @@ public:
 		User user;
 	};
 
-private:
-	uint16_t findNextID();
+	using SearchCallback = Callback<void, uint32_t, const User &>;
 
 public:
 	UserDatabase();
 	void load();
 	void save();
 
+	uint16_t getLastID();
+
 	bool tryRegister(
 	    const char *username, size_t len,
 	    const FixedBuffer<32> &passwordHash,
-	    User::Flags flags);
+	    uint8_t flags);
 
 	UserResult tryLogin(
 	    const char *username, size_t len,
 	    const FixedBuffer<32> &passwordHash);
 
-	UserResult getByID(uint16_t id);
+	decltype(db)::QueryResult getByID(uint16_t id);
+
+	void match(const Vector<Search::SearchTerm> &search, SearchCallback callback);
 };
 
 #endif // !defined(EKONYV_USER_DB_H)

@@ -3,6 +3,7 @@
 
 #include "../storage/database.h"
 #include "../types/callback.h"
+#include "search.h"
 
 struct Book {
 	constexpr static uint8_t PUBLICLY_WRITABLE = 0b00000001;
@@ -32,51 +33,21 @@ struct Book {
 };
 
 enum BookHeader : uint8_t {
-	ID,
-	IN,
-	TITLE,
-	AUTHORS,
-	PUBLISHED,
-	ATTRIBUTES,
-	CREATED,
-	STORAGE_ID,
-	USER_ID,
-	FLAGS,
+	BH_ID,
+	BH_IN,
+	BH_TITLE,
+	BH_AUTHORS,
+	BH_PUBLISHED,
+	BH_ATTRIBUTES,
+	BH_CREATED,
+	BH_STORAGE_ID,
+	BH_USER_ID,
+	BH_FLAGS,
 	bh_size
-};
-
-enum BookSearchType : uint8_t {
-	VALUE,
-	BETWEEN,
-	LIKE,
-	bst_size,
-
-	ANY
-};
-
-enum BookSearchRelation : uint8_t {
-	AND,
-	OR,
-	AND_NOT,
-	OR_NOT,
-	bsr_size
-};
-
-struct BookSearchTerm {
-	BookHeader header;
-	BookSearchType search_type;
-	BookSearchRelation relation;
-
-	String statement;
 };
 
 extern const char *BOOK_HEADERS[bh_size];
 extern uint8_t BOOK_HEADER_LENGTHS[bh_size];
-
-extern const char *BOOK_SEARCH_TYPES[bst_size];
-extern const char *BOOK_RELATION_TYPES[bsr_size];
-
-extern const char BOOK_FLAGS[8];
 
 class BookDatabase {
 public:
@@ -95,7 +66,9 @@ public:
 	void save();
 
 	uint32_t getLastID();
-	void match(const Vector<BookSearchTerm> &search, SearchCallback callback);
+	void match(const Vector<Search::SearchTerm> &search, SearchCallback callback);
+
+	void removeAllOfUser(uint16_t user_id);
 
 	uint32_t add(const Book &partial_book);
 	decltype(db)::QueryResult searchSimilarBook(const Book &partial_book);

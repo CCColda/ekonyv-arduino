@@ -18,19 +18,21 @@ Book getBookFromParameters(const String &path, uint32_t prep)
 {
 	auto result = Book();
 
-	const auto in = ParameterMiddleware(BOOK_HEADERS[BookHeader::IN], BOOK_HEADER_LENGTHS[BookHeader::IN], path, prep);
-	const auto title = ParameterMiddleware(BOOK_HEADERS[BookHeader::TITLE], BOOK_HEADER_LENGTHS[BookHeader::TITLE], path, prep);
-	const auto authors = ParameterMiddleware(BOOK_HEADERS[BookHeader::AUTHORS], BOOK_HEADER_LENGTHS[BookHeader::AUTHORS], path, prep);
-	const auto published = ParameterMiddleware(BOOK_HEADERS[BookHeader::PUBLISHED], BOOK_HEADER_LENGTHS[BookHeader::PUBLISHED], path, prep);
-	const auto attributes = ParameterMiddleware(BOOK_HEADERS[BookHeader::ATTRIBUTES], BOOK_HEADER_LENGTHS[BookHeader::ATTRIBUTES], path, prep);
-	const auto storage_id = ParameterMiddleware(BOOK_HEADERS[BookHeader::STORAGE_ID], BOOK_HEADER_LENGTHS[BookHeader::STORAGE_ID], path, prep);
-	const auto flags = ParameterMiddleware(BOOK_HEADERS[BookHeader::FLAGS], BOOK_HEADER_LENGTHS[BookHeader::FLAGS], path, prep);
-	const auto id = ParameterMiddleware(BOOK_HEADERS[BookHeader::ID], BOOK_HEADER_LENGTHS[BookHeader::ID], path, prep);
+	const auto in = ParameterMiddleware(BOOK_HEADERS[BH_IN], BOOK_HEADER_LENGTHS[BH_IN], path, prep);
+	const auto title = ParameterMiddleware(BOOK_HEADERS[BH_TITLE], BOOK_HEADER_LENGTHS[BH_TITLE], path, prep);
+	const auto authors = ParameterMiddleware(BOOK_HEADERS[BH_AUTHORS], BOOK_HEADER_LENGTHS[BH_AUTHORS], path, prep);
+	const auto published = ParameterMiddleware(BOOK_HEADERS[BH_PUBLISHED], BOOK_HEADER_LENGTHS[BH_PUBLISHED], path, prep);
+	const auto attributes = ParameterMiddleware(BOOK_HEADERS[BH_ATTRIBUTES], BOOK_HEADER_LENGTHS[BH_ATTRIBUTES], path, prep);
+	const auto storage_id = ParameterMiddleware(BOOK_HEADERS[BH_STORAGE_ID], BOOK_HEADER_LENGTHS[BH_STORAGE_ID], path, prep);
+	const auto flags = ParameterMiddleware(BOOK_HEADERS[BH_FLAGS], BOOK_HEADER_LENGTHS[BH_FLAGS], path, prep);
+	const auto id = ParameterMiddleware(BOOK_HEADERS[BH_ID], BOOK_HEADER_LENGTHS[BH_ID], path, prep);
 
 	result.id = id ? Str::fixedAtoi<uint32_t>(id.value.c_str(), id.value.length()) : 0;
 
 	result.in = in ? Str::fixedAtoi<uint64_t>(in.value.c_str(), in.value.length()) : 0;
 	result.storage_id = storage_id ? Str::fixedAtoi<uint16_t>(storage_id.value.c_str(), storage_id.value.length()) : 0;
+
+	result.flags = flags ? Str::fixedAtoi<uint8_t>(flags.value.c_str(), flags.value.length()) : 0u;
 
 	if (title) {
 		const auto decoded = Str::urlDecode(title.value.c_str(), title.value.length());
@@ -60,70 +62,6 @@ Book getBookFromParameters(const String &path, uint32_t prep)
 		memcpy(result.attributes, decoded.c_str(), result.attributes_len);
 	}
 
-	if (flags)
-		for (uint32_t i = 0; i < flags.value.length(); ++i)
-			for (uint8_t j = 0; j < sizeof(BOOK_FLAGS); ++j)
-				if (flags.value[i] == BOOK_FLAGS[j])
-					result.flags |= (0b1 << j);
-
-	return result;
-}
-
-size_t countSearchTerms(const String &path, uint32_t prep)
-{
-	size_t result = 0;
-
-	auto search_string = str('s', result);
-	auto search_param = ParameterMiddleware(search_string.c_str(), search_string.length(), path, prep);
-
-	while (search_param) {
-		++result;
-
-		search_string = str('s', result);
-		search_param = ParameterMiddleware(search_string.c_str(), search_string.length(), path, prep);
-	}
-
-	return result;
-}
-
-BookSearchTerm parseSearchTerm(const String &path, uint32_t prep, size_t term_index)
-{
-	auto result = BookSearchTerm{};
-
-	const auto search_param = ParameterMiddleware(str('s', term_index), path, prep);
-
-	const auto header_index = Str::compareToMap(
-	    search_param.value.c_str(), search_param.value.length(),
-	    BOOK_HEADERS, sizeof(BOOK_HEADERS) / sizeof(BOOK_HEADERS[0]));
-
-	if (header_index == Str::NOT_FOUND)
-		return result;
-
-	result.header = (BookHeader)header_index;
-	result.search_type = BookSearchType::ANY;
-	result.statement = "";
-	result.relation = BookSearchRelation::AND;
-
-	for (uint8_t i = 0; i < bst_size; ++i) {
-		const auto search_param = ParameterMiddleware(str(BOOK_SEARCH_TYPES[i], term_index), path, prep);
-		if (search_param) {
-			result.search_type = (BookSearchType)i;
-			result.statement = Str::urlDecode(search_param.value.c_str(), search_param.value.length());
-			break;
-		}
-	}
-
-	const auto relation_param = ParameterMiddleware(str('r', term_index), path, prep);
-
-	if (relation_param) {
-		const auto relation_index = Str::compareToMap(
-		    relation_param.value.c_str(), relation_param.value.length(),
-		    BOOK_RELATION_TYPES, bsr_size);
-
-		if (relation_index != Str::NOT_FOUND)
-			result.relation = (BookSearchRelation)relation_index;
-	}
-
 	return result;
 }
 
@@ -147,13 +85,7 @@ void sendBook(uint32_t i, const Book &book, EthernetClient *client)
 	client->print(',');
 	client->print(book.user_id);
 	client->print(',');
-
-	for (uint8_t i = 0; i < 8; ++i) {
-		const auto flag = (book.flags & (0b1 << i)) != 0;
-
-		if (flag)
-			client->print((char)BOOK_FLAGS[i]);
-	}
+	client->print((uint32_t)book.flags);
 
 	client->println();
 }
@@ -174,6 +106,11 @@ int postBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &he
 
 	if (!session)
 		return session.sendInvalidResponse(client);
+
+	if ((session.user.flags & User::CAN_WRITE) == 0) {
+		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_UNAUTHORIZED, client);
+		return 0;
+	}
 
 	Book book = getBookFromParameters(path, prep);
 	const auto similar_book = global::db.book.searchSimilarBook(book);
@@ -225,7 +162,8 @@ int postBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &he
 
 		auto result_book = book_info.value;
 
-		result_book.flags = book.flags;
+		if (book.user_id == session.user_id)
+			result_book.flags = book.flags;
 
 #define EK_COPY_STR_IF_VALID(s)                             \
 	if (book.s##_len != 0) {                                \
@@ -267,6 +205,11 @@ int deleteBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &
 
 	if (!session)
 		return session.sendInvalidResponse(client);
+
+	if ((session.user.flags & User::CAN_WRITE) == 0) {
+		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_UNAUTHORIZED, client);
+		return 0;
+	}
 
 	const auto id = ParameterMiddleware("id", 2, path, prep);
 
@@ -344,7 +287,12 @@ int getBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &hea
 	if (!session)
 		return session.sendInvalidResponse(client);
 
-	const auto num_search_terms = countSearchTerms(path, prep);
+	Search::SearchTerm terms_buf[EK_MAX_BOOK_SEARCH_TERMS] = {};
+	Vector<Search::SearchTerm> terms;
+
+	terms.setStorage<EK_MAX_BOOK_SEARCH_TERMS>(terms_buf);
+
+	const auto num_search_terms = Search::parseSearchTermsFromURL(path, prep, BOOK_HEADERS, bh_size, terms);
 
 	if (num_search_terms == 0) {
 		HTTPServer::writeStaticHTMLResponse(
@@ -356,24 +304,6 @@ int getBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &hea
 		    client);
 		return 0;
 	}
-
-	if (num_search_terms > EK_MAX_BOOK_SEARCH_TERMS) {
-		HTTPServer::writeStaticHTMLResponse(
-		    HTTPResponse::StaticHTMLResponse{
-		        400,
-		        "Bad Request",
-		        "400 - Bad Request",
-		        "Only up to " __EK_MACRO_STRING(EK_MAX_BOOK_SEARCH_TERMS) " search terms can be provided."},
-		    client);
-		return 0;
-	}
-
-	BookSearchTerm terms_buf[EK_MAX_BOOK_SEARCH_TERMS] = {};
-	Vector<BookSearchTerm> terms;
-	terms.setStorage<EK_MAX_BOOK_SEARCH_TERMS>(terms_buf);
-
-	for (uint8_t i = 0; i < num_search_terms; ++i)
-		terms.push_back(parseSearchTerm(path, prep, i));
 
 	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
 

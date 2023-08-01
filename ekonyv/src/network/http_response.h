@@ -43,6 +43,11 @@ const StaticHTMLResponse HTML_BOOK_WRITE_PROTECTED = HTTPResponse::StaticHTMLRes
     400, "Bad Request",
     "400 - Bad Request",
     "The book must be edited by its uploader."};
+
+const StaticHTMLResponse HTML_INVALID_USER = HTTPResponse::StaticHTMLResponse{
+    400, "Bad Request",
+    "400 - Bad Request",
+    "The user with the given ID doesn't exist."};
 } // namespace HTTPResponse
 
 #endif // !defined(EKONYV_HTTP_RESPONSE_H)

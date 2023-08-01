@@ -102,7 +102,7 @@ int registerHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &he
 		FixedBuffer<32> password_hash;
 		Str::hashAndSaltString(password_decoded, password_hash);
 
-		const auto reg_success = global::db.user.tryRegister(username_decoded.c_str(), username_decoded.length(), password_hash, User::Flags{1, 1});
+		const auto reg_success = global::db.user.tryRegister(username_decoded.c_str(), username_decoded.length(), password_hash, User::CAN_WRITE);
 
 		if (reg_success) {
 			logger.log("Successfully registered ", username_decoded);

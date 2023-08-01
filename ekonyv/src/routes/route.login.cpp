@@ -7,6 +7,7 @@
 #include "../string/url.h"
 
 #include "../middleware/parameter.mw.h"
+#include "../middleware/session.mw.h"
 
 #include "../arduino/logger.h"
 
@@ -69,14 +70,67 @@ int LoginRoute::loginHandler(const String &path, const Vector<HTTP::ClientHeader
 int LoginRoute::renewHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
-// todo implement
+	const auto prep = ParameterMiddleware::preparePath(path);
+	const auto renew_token = ParameterMiddleware("refresh", path, prep);
+
+	FixedBuffer<16> renew_token_value;
+	string_to_fixed_buffer<16>(renew_token.value.c_str(), renew_token.value.length(), renew_token_value);
+
+	const auto session = global::db.session.checkRefresh(renew_token_value);
+
+	if (!session.valid) {
+		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_UNAUTHORIZED, client);
+		return 0;
+	}
+	const auto new_session = global::db.session.extend(session.index, session.user_id);
+
+	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
+
+	client.println("key,value");
+	client.print("token,");
+	client.println(fixed_buffer_to_string(new_session.token));
+	client.print("refresh,");
+	client.println(fixed_buffer_to_string(new_session.refresh_token));
+	client.print("expire,");
+	client.println(new_session.expire);
+
+	return 0;
 #endif
 }
 
 int LoginRoute::logoutHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
 {
 #if EK_ETHERNET
-// todo implement
+	const auto session = SessionMiddleware(path, false);
+
+	if (!session)
+		return session.sendUnauthorizedResponse(client);
+
+	global::db.session.discard(session.session_index);
+
+	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
+	client.println("key,value");
+	client.println("state,success");
+
+	return 0;
+#endif
+}
+
+int LoginRoute::logoutEverywhereHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client)
+{
+#if EK_ETHERNET
+	const auto session = SessionMiddleware(path, true);
+
+	if (!session)
+		return session.sendUnauthorizedResponse(client);
+
+	global::db.session.discardAllForUser(session.user_id);
+
+	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
+	client.println("key,value");
+	client.println("state,success");
+
+	return 0;
 #endif
 }
 
@@ -85,4 +139,5 @@ void LoginRoute::registerRoute(HTTPServer &server)
 	server.on(HTTP::POST, "/api/user/login", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, loginHandler);
 	server.on(HTTP::POST, "/api/user/renew", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, renewHandler);
 	server.on(HTTP::POST, "/api/user/logout", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, logoutHandler);
+	server.on(HTTP::POST, "/api/user/logout_everywhere", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, logoutEverywhereHandler);
 }

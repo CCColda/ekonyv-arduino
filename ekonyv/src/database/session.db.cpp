@@ -28,6 +28,12 @@ bool searchExpiredRenewToken(
 {
 	return (s.expire + EK_SESSION_RENEW_TIMEOUT_MS) < time;
 }
+
+bool searchForUser(uint32_t i, const Session &s, uint16_t user_id)
+{
+	return s.user_id == user_id;
+}
+
 } // namespace
 
 SessionDatabase::SessionDatabase()
@@ -92,7 +98,7 @@ void SessionDatabase::discard(uint32_t id)
 
 void SessionDatabase::discardAllForUser(uint16_t user_id)
 {
-	// todo implement
+	db.remove_if(0, db.size(), searchForUser, user_id);
 }
 
 void SessionDatabase::update()
