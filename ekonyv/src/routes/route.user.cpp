@@ -115,8 +115,8 @@ int deleteUserHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &
 		return 0;
 	}
 
-	global::db.user.db.remove(stored_user.index);
 	global::db.book.removeAllOfUser(stored_user.value.id);
+	global::db.user.db.remove(stored_user.index);
 
 	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
 	client.println("key,value");
@@ -174,10 +174,10 @@ int getUserHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &hea
 	if (!session)
 		return session.sendInvalidResponse(client);
 
-	Search::SearchTerm terms_buf[EK_MAX_BOOK_SEARCH_TERMS] = {};
+	Search::SearchTerm terms_buf[EK_MAX_SEARCH_TERMS] = {};
 	Vector<Search::SearchTerm> terms;
 
-	terms.setStorage<EK_MAX_BOOK_SEARCH_TERMS>(terms_buf);
+	terms.setStorage<EK_MAX_SEARCH_TERMS>(terms_buf);
 
 	const auto num_search_terms = Search::parseSearchTermsFromURL(path, prep, USER_HEADERS, uh_size, terms);
 
@@ -204,7 +204,7 @@ int getUserHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &hea
 
 	UserDatabase::SearchCallback cb;
 	cb.set(sendUser, &client);
-	
+
 	global::db.user.match(terms, cb);
 
 	return 0;

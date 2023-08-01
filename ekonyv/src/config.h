@@ -54,11 +54,12 @@
 #define EK_SESSION_TIMEOUT_MS 15 * 60 * 1000
 #define EK_SESSION_RENEW_TIMEOUT_MS 15 * 60 * 1000
 
-#define EK_MAX_BOOK_SEARCH_TERMS 8
+#define EK_MAX_SEARCH_TERMS 8
 
 #define EK_USERDB_PATH "ekonyv/db/user.txt"
 #define EK_SESSIONDB_PATH "ekonyv/db/session.txt"
 #define EK_BOOKDB_PATH "ekonyv/db/book.txt"
+#define EK_STORAGEDB_PATH "ekonyv/db/storage.txt"
 
 //! @warning Do not change
 #define EK_MOCK_FILE_SIZE EK_MOCK_FILE_BLOCKS * 512

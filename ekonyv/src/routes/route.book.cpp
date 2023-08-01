@@ -113,18 +113,19 @@ int postBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &he
 	}
 
 	Book book = getBookFromParameters(path, prep);
-	const auto similar_book = global::db.book.searchSimilarBook(book);
-	if (similar_book.state == QueryState::SUCCESS) {
-		HTTPServer::writeStaticHTMLResponse(
-		    HTTPResponse::StaticHTMLResponse{
-		        400, "Bad Request",
-		        "400 - Bad Request",
-		        "A similar book already exists."},
-		    client);
-		return 0;
-	}
 
 	if (book.id == 0) {
+		const auto similar_book = global::db.book.searchSimilarBook(book);
+		if (similar_book.state == QueryState::SUCCESS) {
+			HTTPServer::writeStaticHTMLResponse(
+			    HTTPResponse::StaticHTMLResponse{
+			        400, "Bad Request",
+			        "400 - Bad Request",
+			        "A similar book already exists."},
+			    client);
+			return 0;
+		}
+
 		book.user_id = session.user_id;
 
 		const auto id = global::db.book.add(book);
@@ -287,10 +288,10 @@ int getBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &hea
 	if (!session)
 		return session.sendInvalidResponse(client);
 
-	Search::SearchTerm terms_buf[EK_MAX_BOOK_SEARCH_TERMS] = {};
+	Search::SearchTerm terms_buf[EK_MAX_SEARCH_TERMS] = {};
 	Vector<Search::SearchTerm> terms;
 
-	terms.setStorage<EK_MAX_BOOK_SEARCH_TERMS>(terms_buf);
+	terms.setStorage<EK_MAX_SEARCH_TERMS>(terms_buf);
 
 	const auto num_search_terms = Search::parseSearchTermsFromURL(path, prep, BOOK_HEADERS, bh_size, terms);
 

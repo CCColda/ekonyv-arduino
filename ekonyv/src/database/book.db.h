@@ -69,6 +69,7 @@ public:
 	void match(const Vector<Search::SearchTerm> &search, SearchCallback callback);
 
 	void removeAllOfUser(uint16_t user_id);
+	void removeAllOfStorage(uint16_t user_id);
 
 	uint32_t add(const Book &partial_book);
 	decltype(db)::QueryResult searchSimilarBook(const Book &partial_book);

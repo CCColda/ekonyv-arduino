@@ -10,6 +10,7 @@
 #include "src/routes/route.login.h"
 #include "src/routes/route.register.h"
 #include "src/routes/route.status.h"
+#include "src/routes/route.storage.h"
 #include "src/routes/route.user.hello.h"
 
 #include "src/global/global.h"
@@ -76,6 +77,7 @@ void setup()
 	LoginRoute::registerRoute(global::server);
 	UserHelloRoute::registerRoute(global::server);
 	BookRoute::registerRoute(global::server);
+	StorageRoute::registerRoute(global::server);
 #endif
 }
 

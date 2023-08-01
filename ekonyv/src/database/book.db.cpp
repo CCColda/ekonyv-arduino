@@ -83,6 +83,11 @@ bool userid_search(uint32_t idx, const Book &book, uint16_t user_id)
 {
 	return book.user_id == user_id;
 }
+
+bool storageid_search(uint32_t idx, const Book &book, uint16_t storage_id)
+{
+	return book.storage_id == storage_id;
+}
 } // namespace
 
 /* extern */ const char *BOOK_HEADERS[] = {
@@ -144,6 +149,11 @@ void BookDatabase::match(const Vector<Search::SearchTerm> &search, SearchCallbac
 void BookDatabase::removeAllOfUser(uint16_t user_id)
 {
 	db.remove_if(0, db.size(), userid_search, user_id);
+}
+
+void BookDatabase::removeAllOfStorage(uint16_t storage_id)
+{
+	db.remove_if(0, db.size(), storageid_search, storage_id);
 }
 
 uint32_t BookDatabase::add(const Book &partial_book)

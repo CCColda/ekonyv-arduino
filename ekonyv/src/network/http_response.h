@@ -48,6 +48,11 @@ const StaticHTMLResponse HTML_INVALID_USER = HTTPResponse::StaticHTMLResponse{
     400, "Bad Request",
     "400 - Bad Request",
     "The user with the given ID doesn't exist."};
+
+const StaticHTMLResponse HTML_INVALID_STORAGE = HTTPResponse::StaticHTMLResponse{
+    400, "Bad Request",
+    "400 - Bad Request",
+    "The storage place with the given ID doesn't exist."};
 } // namespace HTTPResponse
 
 #endif // !defined(EKONYV_HTTP_RESPONSE_H)

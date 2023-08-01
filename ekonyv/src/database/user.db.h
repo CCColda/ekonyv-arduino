@@ -30,7 +30,6 @@ enum UserHeader : uint8_t {
 
 extern const char *USER_HEADERS[uh_size];
 extern uint8_t USER_HEADER_LENGTHS[uh_size];
-extern const char USER_FLAGS[8];
 
 class UserDatabase {
 public:
