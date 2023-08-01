@@ -35,8 +35,8 @@ int requestCodeHandler(const String &path, const Vector<HTTP::ClientHeaderPair> 
 
 		client.println("success");
 
-#if !EK_PRODUCTION
-		// todo Display on LCD
+#if !EK_LCD
+#warning "Registration codes will be sent along with the response as long as LCD is not enabled."
 		client.print("code,");
 		client.write(global::db.reg_req.code.data, 4);
 		client.println();

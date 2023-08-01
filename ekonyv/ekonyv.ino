@@ -15,6 +15,8 @@
 
 #include "src/global/global.h"
 
+#include "src/lcd/lcdstate.h"
+
 auto logger = Logger("MAIN");
 
 void setup()
@@ -38,6 +40,10 @@ void setup()
 		go_string.toLowerCase();
 	} while (go_string != "go");
 #endif
+#endif
+
+#if EK_LCD
+	LCDState::update();
 #endif
 
 	if (!global::sd.init()) {
@@ -79,6 +85,8 @@ void setup()
 	BookRoute::registerRoute(global::server);
 	StorageRoute::registerRoute(global::server);
 #endif
+
+	LCDState::update();
 }
 
 void loop()
@@ -88,6 +96,10 @@ void loop()
 	global::ntp.update();
 	global::server.update();
 	global::requests.update();
+#endif
+
+#if EK_LCD
+	LCDState::update();
 #endif
 
 	global::eventqueue.execute(5);

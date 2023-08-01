@@ -1,6 +1,7 @@
 #ifndef EKONYV_CONFIG_H
 #define EKONYV_CONFIG_H
 
+#include "pins.h"
 #include "salt.h"
 
 #pragma region secret checks
@@ -35,14 +36,13 @@
 #define EK_SD 0
 #define EK_ETHERNET 1
 #define EK_VERBOSE_LOGGING 0
+#define EK_LCD 1
 
 #define EK_SERVER_PORT 80
 
 #define EK_HTTP_BUFFER_SIZE 512
 #define EK_HTTP_HANDLER_STORAGE 16
 #define EK_HTTP_REQUEST_STORAGE 8
-
-#define EK_HANGING_ANALOG_PIN A5
 
 #define EK_MOCK_FILE_BLOCKS 2
 #define EK_MOCK_FILE_COUNT 8

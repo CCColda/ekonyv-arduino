@@ -16,6 +16,17 @@ String str(Args... args)
 	return result;
 }
 
+template <typename T>
+String number_to_padded_string(T v, uint8_t pad_chars)
+{
+	String result = String(v, 10);
+
+	for (uint32_t i = result.length(); i < pad_chars; ++i)
+		result = '0' + result;
+
+	return result;
+}
+
 String ip_to_string(const IPAddress &address);
 String byte_to_string(const byte &b);
 byte string_to_byte(const char *str, size_t size);

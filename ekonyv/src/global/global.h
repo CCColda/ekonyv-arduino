@@ -17,6 +17,8 @@
 #include "../database/storage.db.h"
 #include "../database/user.db.h"
 
+#include "../lcd/lcd.h"
+
 namespace global {
 struct Databases {
 	RegistrationRequest reg_req;
@@ -39,6 +41,10 @@ extern HTTPRequestManager requests;
 extern Storage sd;
 extern Databases db;
 extern EventQueue<32> eventqueue;
+
+#if EK_LCD
+extern LCD lcd;
+#endif
 
 unsigned long time();
 } // namespace global
