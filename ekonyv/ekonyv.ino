@@ -98,6 +98,9 @@ void loop()
 	global::requests.update();
 #endif
 
+	global::db.reg_req.update();
+	global::db.session.update();
+
 #if EK_LCD
 	LCDState::update();
 #endif

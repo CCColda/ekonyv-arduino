@@ -29,7 +29,7 @@ unsigned long time()
 #if EK_ETHERNET
 	return ntp.getEpochTime();
 #else
-	return millis();
+	return millis() / 1000;
 #endif
 }
 } // namespace global

@@ -28,7 +28,7 @@ int StatusRoute::handler(const String &path, const Vector<HTTP::ClientHeaderPair
 	client.print("TIME_SINCE_EPOCH,");
 	client.println(global::ntp.getEpochTime());
 	client.print("TIME_SINCE_DEVICE_EPOCH,");
-	client.println(millis());
+	client.println(millis() / 1000);
 
 	if (global::sd.connected()) {
 		client.println("SD,connected");
