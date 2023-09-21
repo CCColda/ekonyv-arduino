@@ -16,6 +16,19 @@ String timeToHHMMSS(unsigned long time_seconds)
 	    number_to_padded_string(minutes, 2), ':',
 	    number_to_padded_string(seconds, 2));
 }
+
+constexpr uint8_t calculateByteDecimalLength(uint8_t byte)
+{
+	return byte >= 100 ? 3 : (byte >= 10 ? 2 : 1);
+}
+
+constexpr uint8_t calculateIPStringLength(uint32_t address)
+{
+	return calculateByteDecimalLength(address & 0xFF) +
+	       calculateByteDecimalLength((address >> 8) & 0xFF) +
+	       calculateByteDecimalLength((address >> 16) & 0xFF) +
+	       calculateByteDecimalLength((address >> 24) & 0xFF) + 3;
+}
 } // namespace
 
 LCD::LCD(
@@ -41,7 +54,10 @@ void LCD::update()
 		}
 		case STATE_SERVER_RUNNING: {
 			lcd.setCursor(0, 0);
-			lcd.print("IP:");
+
+			if (calculateIPStringLength(uint32_t(state.ipv4)) <= 13)
+				lcd.print("IP:");
+
 			lcd.print(IPAddress(state.ipv4));
 			break;
 		}
