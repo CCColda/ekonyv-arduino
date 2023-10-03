@@ -15,6 +15,7 @@ private:
 	const char *m_path;
 	File m_file;
 	uint32_t m_numRecords;
+	bool m_headerChecked;
 
 	struct Header {
 		char magic[2];
@@ -22,73 +23,95 @@ private:
 		uint32_t numRecords;
 	};
 
+	struct CheckHeaderResult {
+		bool success;
+		uint32_t numRecords;
+	};
+
 private:
-	void writeHeader()
+	CheckHeaderResult checkAndReadHeader()
 	{
+		auto header = Header{};
+
+		(void)m_file.seek(0);
+		const size_t bytes_read = m_file.readBytes((byte *)&header, sizeof(header));
+
+		if (bytes_read == sizeof(header) &&
+		    header.magic[0] == 'D' && header.magic[1] == 'B' &&
+		    header.recordSize == RecordSize) {
+
+			VERBOSE_LOG(logger, "Checked header and read ", header.numRecords, " records");
+			return {true, header.numRecords};
+		}
+
+		VERBOSE_LOG(logger, "Failed checking header");
+
+		return {false, 0};
+	}
+
+	bool updateHeader()
+	{
+		VERBOSE_LOG(logger, "Updating header in ", m_path, " to ", m_numRecords, " records");
+
 		const auto header = Header{
 		    {'D', 'B'},
 		    RecordSize,
 		    m_numRecords};
 
-		m_file.write((const byte *)&header, sizeof(header));
+		(void)m_file.seek(0);
+		return m_file.write((const byte *)&header, sizeof(header)) == sizeof(header);
 	}
 
-	bool checkAndReadHeader()
-	{
-		auto header = Header{};
-
-		m_file.seek(0);
-		m_file.readBytes((byte *)&header, sizeof(header));
-
-		if (header.magic[0] == 'D' && header.magic[1] == 'B' && header.recordSize == RecordSize) {
-			VERBOSE_LOG(logger, "Checked header and read ", header.numRecords, " records");
-			m_numRecords = header.numRecords;
-			return true;
-		}
-
-		VERBOSE_LOG(logger, "Header checking failed");
-
-		return false;
-	}
-
-	static uint32_t recordPosition(uint32_t n)
+	constexpr static uint32_t recordPosition(uint32_t n)
 	{
 		return sizeof(Header) + (RecordSize * n);
 	}
 
 public:
-	BlockFile(const char *path) : m_path(path), m_file(), m_numRecords(0)
+	BlockFile(const char *path) : m_path(path), m_file(), m_numRecords(0), m_headerChecked(false)
 	{
 	}
 
-	BlockFile(BlockFile &&other) : m_path(other.m_path), m_file(other.m_file), m_numRecords(other.m_numRecords)
+	BlockFile(BlockFile &&other) : m_path(other.m_path), m_file(other.m_file), m_numRecords(other.m_numRecords), m_headerChecked(other.m_headerChecked)
 	{
 	}
 
 	~BlockFile()
 	{
-		close();
+		(void)close();
 	}
 
-	const char *getPath() const
+	constexpr const char *getPath() const
 	{
 		return m_path;
 	}
 
 	bool open()
 	{
-		m_file = SD.open(m_path, FILE_WRITE);
+		logger.log("Opening file ", m_path);
+		m_file = SD.open(m_path, O_CREAT | O_RDWR | O_SYNC);
 
 		if (m_file) {
 			if (m_file.size() == 0) {
 				VERBOSE_LOG(logger, "Opening blockfile; Writing header for ", m_path);
-				writeHeader();
+				updateHeader();
 				return true;
 			}
 
-			VERBOSE_LOG(logger, "Opening blockfile; Checking header for ", m_path);
+			if (!m_headerChecked) {
+				m_headerChecked = true;
 
-			return checkAndReadHeader();
+				VERBOSE_LOG(logger, "Opening blockfile; Checking header for ", m_path);
+
+				const auto [success, numRecords] = checkAndReadHeader();
+
+				if (success && m_numRecords != 0)
+					m_numRecords = numRecords;
+
+				return success;
+			}
+
+			return true;
 		}
 		else {
 			logger.error("Failed opening blockfile ", m_path);
@@ -102,7 +125,6 @@ public:
 			return false;
 
 		m_file.close();
-		m_numRecords = 0;
 
 		return true;
 	}
@@ -117,18 +139,21 @@ public:
 		return m_numRecords;
 	}
 
-	void append(void *data)
+	bool append(void *data)
 	{
-		m_file.seek(recordPosition(m_numRecords));
-		m_file.write((const byte *)data, RecordSize);
+		(void)m_file.seek(recordPosition(m_numRecords));
+		if (!m_file.write((const byte *)data, RecordSize)) {
+			logger.error("Failed appending record to ", m_path);
+			return false;
+		}
+
 		++m_numRecords;
+		return updateHeader();
 	}
 
 	void erase(file_index_t n)
 	{
 		byte recordBuffer[RecordSize] = {};
-
-		VERBOSE_LOG(logger, "Erasing #", n, "; until ", m_numRecords);
 
 		for (file_index_t i = n + 1; i < m_numRecords; ++i) {
 			m_file.seek(recordPosition(i));
@@ -137,7 +162,9 @@ public:
 			m_file.seek(recordPosition(i - 1));
 			m_file.write((const byte *)&recordBuffer, sizeof(recordBuffer));
 		}
+
 		--m_numRecords;
+		updateHeader();
 	}
 
 	void modify(file_index_t n, void *data)
@@ -151,56 +178,6 @@ public:
 		m_file.seek(recordPosition(n));
 		m_file.readBytes((byte *)out_data, min(out_size, RecordSize));
 	}
-
-	void updateHeader()
-	{
-		VERBOSE_LOG(logger, "Updating header in ", m_path);
-		m_file.seek(0);
-		writeHeader();
-	}
-
-	/* template <size_t BufferSize>
-bool shrink_to_fit()
-{
-	byte copyBuffer[BufferSize] = {};
-
-	String tempFilePath = String(m_path) + '~';
-
-	const auto numRecords = m_numRecords;
-	const auto totalBlocksToCopy = (numRecords * RecordSize + sizeof(Header)) / BufferSize;
-	const auto leftover = (numRecords * RecordSize + sizeof(Header)) % BufferSize;
-
-	for (uint32_t i = 0; i < totalBlocksToCopy; ++i) {
-	    m_file.seek(i * BufferSize);
-	    m_file.readBytes(copyBuffer, sizeof(copyBuffer));
-
-	    m_file.close();
-
-	    File destinationFile = SD.open(tempFilePath, FILE_WRITE);
-	    destinationFile.write(copyBuffer, sizeof(copyBuffer));
-	    destinationFile.close();
-
-	    m_file.open(m_path, FILE_WRITE);
-	}
-
-	if (leftover != 0) {
-	    m_file.seek(totalBlocksToCopy * BufferSize);
-	    m_file.readBytes(copyBuffer, leftover);
-
-	    m_file.close();
-
-	    File destinationFile = SD.open(tempFilePath, FILE_WRITE);
-	    destinationFile.write(copyBuffer, sizeof(copyBuffer));
-	    destinationFile.close();
-	}
-
-	if (m_file)
-	    m_file.close();
-
-	// there is no move???
-} */
-
-	// void modify(file_index_t n, )
 };
 
 template <uint16_t RecordSize>

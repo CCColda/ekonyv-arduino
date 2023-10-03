@@ -17,6 +17,8 @@
 
 #include "src/lcd/lcdstate.h"
 
+#include "src/serial/serial.h"
+
 auto logger = Logger("MAIN");
 
 void setup()
@@ -39,6 +41,7 @@ void setup()
 		go_string.trim();
 		go_string.toLowerCase();
 	} while (go_string != "go");
+
 #endif
 #endif
 
@@ -47,13 +50,24 @@ void setup()
 #endif
 
 	if (!global::sd.init()) {
-		logger.error("Failed initializing SD card");
+		// logger.error("Failed initializing SD card");
+		Utility::halt("Failed initializing SD card");
 	}
 	else {
 		logger.log("SD Card connected; ", Storage::infoToString(global::sd.getInfo()));
 	}
 
 #if EK_ETHERNET
+#if EK_SD
+	if (!SD.exists(EK_DB_ROOT_PATH)) {
+		logger.log("Creating " EK_DB_ROOT_PATH " on SD card...");
+
+		if (!SD.mkdir(EK_DB_ROOT_PATH)) {
+			logger.warning("Failed creating directories.");
+		}
+	}
+#endif
+
 	if (!global::network.tryConnectUsingDHCP()) {
 		logger.warning("DHCP setup failed; falling back to static IP");
 
@@ -64,9 +78,7 @@ void setup()
 
 	global::server.start();
 
-	global::db.user.load();
-	global::db.session.load();
-	global::db.book.load();
+	global::db.load();
 
 	global::ntp.begin();
 
@@ -91,6 +103,10 @@ void setup()
 
 void loop()
 {
+#if EK_SERIAL
+	SerialCommands::update();
+#endif
+
 #if EK_ETHERNET
 	global::network.maintain();
 	global::ntp.update();
@@ -98,8 +114,7 @@ void loop()
 	global::requests.update();
 #endif
 
-	global::db.reg_req.update();
-	global::db.session.update();
+	global::db.update(global::time());
 
 #if EK_LCD
 	LCDState::update();

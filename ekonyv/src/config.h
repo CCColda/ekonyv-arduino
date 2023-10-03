@@ -32,8 +32,8 @@
 
 #define EK_PRODUCTION 0
 #define EK_SERIAL 1
-#define EK_SERIAL_INPUT_FOR_START 0
-#define EK_SD 0
+#define EK_SERIAL_INPUT_FOR_START 1
+#define EK_SD 1
 #define EK_ETHERNET 1
 #define EK_VERBOSE_LOGGING 0
 #define EK_LCD 1
@@ -56,10 +56,14 @@
 
 #define EK_MAX_SEARCH_TERMS 8
 
-#define EK_USERDB_PATH "ekonyv/db/user.txt"
-#define EK_SESSIONDB_PATH "ekonyv/db/session.txt"
-#define EK_BOOKDB_PATH "ekonyv/db/book.txt"
-#define EK_STORAGEDB_PATH "ekonyv/db/storage.txt"
+#define EK_DB_UPDATE_INTERVAL_S 60
+#define EK_SESSION_UPDATE_INTERVAL_S 10
+
+#define EK_DB_ROOT_PATH "ekdb"
+#define EK_USERDB_PATH EK_DB_ROOT_PATH "/user.db"
+#define EK_SESSIONDB_PATH EK_DB_ROOT_PATH "/sess.db"
+#define EK_BOOKDB_PATH EK_DB_ROOT_PATH "/book.db"
+#define EK_STORAGEDB_PATH EK_DB_ROOT_PATH "/stor.db"
 
 //! @warning Do not change
 #define EK_MOCK_FILE_SIZE EK_MOCK_FILE_BLOCKS * 512

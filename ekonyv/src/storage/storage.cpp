@@ -1,18 +1,21 @@
 #include "storage.h"
+#include "../string/string.h"
 
 /* private static */ Logger Storage::logger = Logger("SDCR");
 
 /* static */ const char *Storage::typeToString(Info::Type type)
 {
 	switch (type) {
+#if !EK_SD
+		case Info::MOCK:
+			return "MOCK";
+#endif
 		case Info::SD1:
 			return "SD1";
 		case Info::SD2:
 			return "SD2";
 		case Info::SDHC:
 			return "SDHC";
-		case Info::MOCK:
-			return "MOCK";
 		default:
 			return "<unknown>";
 	}
@@ -43,6 +46,11 @@ Storage::Storage(uint8_t pin)
 
 bool Storage::init()
 {
+	if (!SD.begin(m_pin)) {
+		logger.error("Failed initializing SD library.");
+		return false;
+	}
+
 	if (!m_card.init(SPI_QUARTER_SPEED, m_pin)) {
 		logger.error("Failed initializing SD card; card not found. Make sure to insert it in the MKRZero slot instead of the ETH shield.");
 		return false;
@@ -58,11 +66,6 @@ bool Storage::init()
 		return false;
 	}
 
-	if (!SD.begin(m_pin)) {
-		logger.error("Failed initializing SD library.");
-		return false;
-	}
-
 	m_connected = true;
 
 	return true;
@@ -70,8 +73,14 @@ bool Storage::init()
 
 bool Storage::close()
 {
+	if (!m_connected)
+		return false;
+
 	m_connected = false;
 	root.close();
+	SD.end();
+
+	return true;
 }
 
 bool Storage::connected() const
@@ -81,6 +90,11 @@ bool Storage::connected() const
 
 Storage::Info Storage::getInfo() const
 {
+	if (!m_connected)
+		return Info{
+		    Info::Type::UNKNOWN,
+		    0};
+
 	return Info{
 	    Info::Type(m_card.type()),
 	    (uint64_t)m_volume.blocksPerCluster() * (uint64_t)m_volume.clusterCount() * (uint64_t)512u};

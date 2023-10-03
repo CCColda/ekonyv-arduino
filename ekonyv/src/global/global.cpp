@@ -15,7 +15,7 @@ HTTPRequestManager requests = HTTPRequestManager();
 #endif
 
 Storage sd = Storage(EK_SDCARD_PIN);
-Databases db = Databases{};
+Databases db = Databases();
 EventQueue<32> eventqueue = EventQueue<32>();
 
 #if EK_LCD

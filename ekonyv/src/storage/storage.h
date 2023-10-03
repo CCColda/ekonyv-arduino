@@ -1,8 +1,13 @@
 #ifndef EKONYV_STORAGE_H
 #define EKONYV_STORAGE_H
 
+#include "../config.h"
+
 #if EK_SD
+// clang-format off
+#include <SPI.h>
 #include <SD.h>
+// clang-format on
 #else
 #include "../storage/mocksd.h"
 #warning "Using mock SD library"
@@ -14,11 +19,13 @@ class Storage {
 public:
 	struct Info {
 		enum Type : uint8_t {
+#if !EK_SD
+			MOCK = SD_CARD_TYPE_MOCK,
+#endif
 			UNKNOWN = 0,
 			SD1 = SD_CARD_TYPE_SD1,
 			SD2 = SD_CARD_TYPE_SD2,
-			SDHC = SD_CARD_TYPE_SDHC,
-			MOCK = SD_CARD_TYPE_MOCK
+			SDHC = SD_CARD_TYPE_SDHC
 		};
 
 		Type type;

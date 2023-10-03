@@ -11,23 +11,11 @@
 #include "../network/network.h"
 #include "../storage/storage.h"
 
-#include "../database/book.db.h"
-#include "../database/registrationrequest.mem.h"
-#include "../database/session.db.h"
-#include "../database/storage.db.h"
-#include "../database/user.db.h"
-
 #include "../lcd/lcd.h"
 
-namespace global {
-struct Databases {
-	RegistrationRequest reg_req;
-	UserDatabase user;
-	SessionDatabase session;
-	BookDatabase book;
-	StorageDatabase storage;
-};
+#include "./databases.h"
 
+namespace global {
 #if EK_ETHERNET
 extern Network network;
 extern HTTPServer server;

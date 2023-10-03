@@ -69,7 +69,7 @@ private:
 	};
 
 public:
-	Database(const char *path) : m_file(path), m_file_num_records(0), m_num_records(0)
+	Database(const char *path) : m_file(path), m_updateCache(), m_file_num_records(0), m_num_records(0)
 	{
 	}
 
@@ -82,44 +82,47 @@ public:
 
 	bool tryLoad()
 	{
-		if (!m_file.open())
+		if (!m_file.open()) {
+			VERBOSE_LOG(logger, "LOAD - Failed loading file ", m_file.getPath());
 			return false;
+		}
 
 		m_num_records = m_file_num_records = m_file.getRecordCount();
 
 		m_file.close();
 
-		VERBOSE_LOG(logger, "Got record count: ", m_file_num_records);
+		VERBOSE_LOG(logger, "LOAD - Got record count: ", m_file_num_records);
 
 		return true;
 	}
 
 	bool trySave()
 	{
-		if (m_updateCache.isEmpty()) {
-			VERBOSE_LOG(logger, "Trying to save ", m_file.getPath(), ", but cache is empty");
+		if (m_updateCache.isEmpty())
 			return true;
+
+		if (!m_file.open()) {
+			VERBOSE_LOG(logger, "SAVE - Failed opening file ", m_file.getPath(), " for saving");
+			return false;
 		}
 
-		if (!m_file.open())
-			return false;
-
-		VERBOSE_LOG(logger, "Trying to save ", m_file.getPath());
+		VERBOSE_LOG_B(logger, "SAVE - Opened ", m_file.getPath(), " for saving (", m_updateCache.size(), " records)\n");
 
 		while (!m_updateCache.isEmpty()) {
 			const auto update = m_updateCache.shift();
+
 			switch (update.type) {
 				case UpdateType::ADD: {
-					VERBOSE_LOG(logger, "Processing add command");
+					VERBOSE_LOG_C(logger, "Processing add command\n");
 					m_file.append(const_cast<Record *>(&update.data));
 					++m_file_num_records;
 					break;
 				}
 				case UpdateType::REMOVE: {
-					VERBOSE_LOG(logger, "Processing remove command at ", update.n);
+					VERBOSE_LOG_C(logger, "Processing remove command at ", update.n, "\n");
 
 					if (update.n >= m_file_num_records) {
-						VERBOSE_LOG(logger, "Invalid remove; removing beyond ", m_file_num_records);
+						VERBOSE_LOG_C(logger, "Invalid remove; removing beyond ", m_file_num_records, "\n");
 						break;
 					}
 
@@ -129,18 +132,19 @@ public:
 					break;
 				}
 				case UpdateType::MODIFY: {
-					size_t correctedN = update.n;
+					if (update.n >= m_file_num_records) {
+						VERBOSE_LOG_C(logger, "Invalid modify; modifying beyond ", m_file_num_records, "\n");
+						break;
+					}
 
-					VERBOSE_LOG(logger, "Processing modify command at ", update.n);
-
-					m_file.modify(correctedN, const_cast<Record *>(&update.data));
+					VERBOSE_LOG_C(logger, "Processing modify command at ", update.n, "\n");
+					m_file.modify(update.n, const_cast<Record *>(&update.data));
 					break;
 				}
 			}
 		}
 
-		m_file.updateHeader();
-
+		VERBOSE_LOG_E(logger);
 		m_file.close();
 
 		return true;
@@ -309,6 +313,6 @@ public:
 };
 
 template <typename Record, size_t CacheSize>
-Logger Database<Record, CacheSize>::logger = Logger("DBMG");
+Logger Database<Record, CacheSize>::logger = Logger("DB");
 
 #endif // !defined(EKONYV_DATABASE_H)
