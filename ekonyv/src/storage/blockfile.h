@@ -93,6 +93,7 @@ public:
 
 		if (m_file) {
 			if (m_file.size() == 0) {
+				m_headerChecked = true;
 				VERBOSE_LOG(logger, "Opening blockfile; Writing header for ", m_path);
 				updateHeader();
 				return true;
@@ -100,12 +101,11 @@ public:
 
 			if (!m_headerChecked) {
 				m_headerChecked = true;
-
 				VERBOSE_LOG(logger, "Opening blockfile; Checking header for ", m_path);
 
 				const auto [success, numRecords] = checkAndReadHeader();
 
-				if (success && m_numRecords != 0)
+				if (success)
 					m_numRecords = numRecords;
 
 				return success;
@@ -134,7 +134,7 @@ public:
 		return m_file;
 	}
 
-	file_index_t getRecordCount() const
+	constexpr file_index_t getRecordCount() const
 	{
 		return m_numRecords;
 	}
