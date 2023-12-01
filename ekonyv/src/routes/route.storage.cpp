@@ -33,7 +33,8 @@ void sendBookStorage(uint32_t i, const BookStorage &storage, EthernetClient *cli
 	client->print(storage.id);
 	client->print(",\"");
 	client->write(storage.name, storage.name_len);
-	client->println("\"");
+	client->print("\",");
+	client->println(storage.user_id);
 }
 
 } // namespace
@@ -181,7 +182,7 @@ int getAllStoragesHandler(const String &path, const Vector<HTTP::ClientHeaderPai
 	for (uint8_t i = 0; i < sh_size; ++i) {
 		client.print(STORAGE_HEADERS[i]);
 
-		if (i < bh_size - 1)
+		if (i < sh_size - 1)
 			client.print(',');
 	}
 	client.println();

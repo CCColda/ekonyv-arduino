@@ -21,6 +21,17 @@ void update()
 		global::db.save(global::time());
 		Utility::halt("Halt command received");
 	}
+	else if (command.startsWith("rmf")) {
+		const auto space = command.indexOf(' ') + 1;
+		if (space > 0) {
+			const auto path = command.substring(space);
+
+			if (SD.remove(path))
+				Serial.println("Removed \"" + path + "\"");
+			else
+				Serial.println("Failed to remove \"" + path + "\"");
+		}
+	}
 	else if (command.startsWith("dumpfh")) {
 		const auto space = command.indexOf(' ') + 1;
 		if (space > 0) {

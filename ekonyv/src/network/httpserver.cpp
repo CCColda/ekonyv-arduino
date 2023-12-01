@@ -112,6 +112,9 @@ void HTTPServer::update()
 	client.print("Content-Type:");
 	client.println(content_type);
 
+	client.print("Access-Control-Allow-Origin:");
+	client.println("*"); // todo
+
 	client.println("Connection:close");
 	client.println();
 }

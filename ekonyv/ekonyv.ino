@@ -9,9 +9,9 @@
 #include "src/routes/route.ekonyv.h"
 #include "src/routes/route.login.h"
 #include "src/routes/route.register.h"
+#include "src/routes/route.session.h"
 #include "src/routes/route.status.h"
 #include "src/routes/route.storage.h"
-#include "src/routes/route.user.hello.h"
 
 #include "src/global/global.h"
 
@@ -93,7 +93,7 @@ void setup()
 	StatusRoute::registerRoute(global::server);
 	RegisterRoute::registerRoute(global::server);
 	LoginRoute::registerRoute(global::server);
-	UserHelloRoute::registerRoute(global::server);
+	SessionRoute::registerRoute(global::server);
 	BookRoute::registerRoute(global::server);
 	StorageRoute::registerRoute(global::server);
 #endif
