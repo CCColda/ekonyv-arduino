@@ -81,12 +81,12 @@ UserDatabase::UserDatabase()
 
 void UserDatabase::load()
 {
-	db.tryLoad();
+	db.initialize();
 }
 
 void UserDatabase::save()
 {
-	db.trySave();
+	db.flush();
 }
 
 uint16_t UserDatabase::getLastID()
@@ -111,7 +111,7 @@ bool UserDatabase::tryRegister(
 	    matchUsername,
 	    username, len);
 
-	if (searchResult.state == QueryState::SUCCESS) {
+	if (!searchResult.success) {
 		return false;
 	}
 
@@ -137,7 +137,7 @@ UserDatabase::UserResult UserDatabase::tryLogin(
 	    matchUsernamePassword,
 	    username, len, passwordHash);
 
-	if (searchResult.state != QueryState::SUCCESS)
+	if (!searchResult.success)
 		return UserResult{false, User()};
 
 	return UserResult{true, searchResult.value};
@@ -159,5 +159,5 @@ void UserDatabase::match(const Vector<Search::SearchTerm> &search, SearchCallbac
 	    search,
 	    callback};
 
-	db.iterate(false, 0, db.size(), false, match_iterator, &data);
+	db.iterate(0, db.size(), false, match_iterator, &data);
 }

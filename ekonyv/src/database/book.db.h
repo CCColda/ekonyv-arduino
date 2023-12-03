@@ -51,7 +51,7 @@ extern uint8_t BOOK_HEADER_LENGTHS[bh_size];
 
 class BookDatabase {
 public:
-	Database<Book, 4> db;
+	Database<Book, EK_BOOKDB_BUFFER> db;
 
 	struct BookResult {
 		bool success;

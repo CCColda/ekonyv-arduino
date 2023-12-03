@@ -64,7 +64,7 @@ int postUserHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &he
 
 	const auto user_info = global::db.user.getByID(user.id);
 
-	if (!user_info.state != QueryState::SUCCESS) {
+	if (!user_info.success) {
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_INVALID_USER, client);
 		return 0;
 	}
@@ -105,7 +105,7 @@ int deleteUserHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &
 
 	const auto stored_user = global::db.user.getByID(Str::fixedAtoi<uint16_t>(id.value.c_str(), id.value.length()));
 
-	if (stored_user.state == QueryState::ERROR) {
+	if (!stored_user.success) {
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_INVALID_USER, client);
 		return 0;
 	}
@@ -161,7 +161,7 @@ int getAllUsersHandler(const String &path, const Vector<HTTP::ClientHeaderPair> 
 	}
 	client.println();
 
-	global::db.user.db.iterate(false, 0, global::db.book.db.size(), false, sendUser, &client);
+	global::db.user.db.iterate(0, global::db.book.db.size(), false, sendUser, &client);
 
 	return 0;
 }

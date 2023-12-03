@@ -13,7 +13,7 @@ struct Session {
 
 class SessionDatabase {
 public:
-	Database<Session, 4> db;
+	Database<Session, EK_SESSIONDB_BUFFER> db;
 
 	struct SessionInfo {
 		bool valid;

@@ -73,12 +73,12 @@ StorageDatabase::StorageDatabase()
 
 void StorageDatabase::load()
 {
-	db.tryLoad();
+	db.initialize();
 }
 
 void StorageDatabase::save()
 {
-	db.trySave();
+	db.flush();
 }
 
 uint16_t StorageDatabase::getLastID()
@@ -124,5 +124,5 @@ void StorageDatabase::match(const Vector<Search::SearchTerm> &search, SearchCall
 	    search,
 	    callback};
 
-	db.iterate(false, 0, db.size(), false, match_iterator, &data);
+	db.iterate(0, db.size(), false, match_iterator, &data);
 }

@@ -43,8 +43,8 @@ bool Databases::save(unsigned long time)
 {
 	logger.log("Saving databases...");
 	m_lastSave = time;
-	return session.db.trySave() &&
-	       user.db.trySave() &&
-	       book.db.trySave() &&
-	       storage.db.trySave();
+	return session.db.flush() &&
+	       user.db.flush() &&
+	       book.db.flush() &&
+	       storage.db.flush();
 }

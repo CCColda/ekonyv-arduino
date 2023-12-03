@@ -61,9 +61,16 @@
 
 #define EK_DB_ROOT_PATH "ekdb"
 #define EK_USERDB_PATH EK_DB_ROOT_PATH "/user.db"
+#define EK_USERDB_BUFFER 4
+
 #define EK_SESSIONDB_PATH EK_DB_ROOT_PATH "/sess.db"
+#define EK_SESSIONDB_BUFFER 12
+
 #define EK_BOOKDB_PATH EK_DB_ROOT_PATH "/book.db"
+#define EK_BOOKDB_BUFFER 4
+
 #define EK_STORAGEDB_PATH EK_DB_ROOT_PATH "/stor.db"
+#define EK_STORAGEDB_BUFFER 8
 
 //! @warning Do not change
 #define EK_MOCK_FILE_SIZE EK_MOCK_FILE_BLOCKS * 512

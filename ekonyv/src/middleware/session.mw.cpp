@@ -30,7 +30,7 @@ SessionMiddleware::SessionMiddleware(
 	if (get_user) {
 		const auto user_result = global::db.user.getByID(user_id);
 
-		if (user_result.state == QueryState::SUCCESS)
+		if (user_result.success)
 			user = user_result.value;
 	}
 }

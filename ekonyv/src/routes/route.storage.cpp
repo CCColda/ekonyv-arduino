@@ -57,7 +57,7 @@ int postStorageHandler(const String &path, const Vector<HTTP::ClientHeaderPair> 
 
 	if (storage.id == 0) {
 		const auto similar_book = global::db.storage.searchSimilarStorage(storage);
-		if (similar_book.state == QueryState::SUCCESS) {
+		if (similar_book.success) {
 			HTTPServer::writeStaticHTMLResponse(
 			    HTTPResponse::StaticHTMLResponse{
 			        400, "Bad Request",
@@ -92,7 +92,7 @@ int postStorageHandler(const String &path, const Vector<HTTP::ClientHeaderPair> 
 	else {
 		const auto storage_info = global::db.storage.getByID(storage.id);
 
-		if (storage_info.state == QueryState::ERROR) {
+		if (!storage_info.success) {
 			HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_INVALID_STORAGE, client);
 			return 0;
 		}
@@ -136,7 +136,7 @@ int deleteStorageHandler(const String &path, const Vector<HTTP::ClientHeaderPair
 
 	const auto stored_storage = global::db.storage.getByID(Str::fixedAtoi<uint16_t>(id.value.c_str(), id.value.length()));
 
-	if (stored_storage.state == QueryState::ERROR) {
+	if (!stored_storage.success) {
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_INVALID_STORAGE, client);
 		return 0;
 	}
@@ -187,7 +187,7 @@ int getAllStoragesHandler(const String &path, const Vector<HTTP::ClientHeaderPai
 	}
 	client.println();
 
-	global::db.storage.db.iterate(false, 0, global::db.book.db.size(), false, sendBookStorage, &client);
+	global::db.storage.db.iterate(0, global::db.book.db.size(), false, sendBookStorage, &client);
 
 	return 0;
 }

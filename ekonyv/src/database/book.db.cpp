@@ -121,12 +121,12 @@ BookDatabase::BookDatabase()
 
 void BookDatabase::load()
 {
-	db.tryLoad();
+	db.initialize();
 }
 
 void BookDatabase::save()
 {
-	db.trySave();
+	db.flush();
 }
 
 uint32_t BookDatabase::getLastID()
@@ -143,7 +143,7 @@ void BookDatabase::match(const Vector<Search::SearchTerm> &search, SearchCallbac
 	    search,
 	    callback};
 
-	db.iterate(false, 0, db.size(), false, match_iterator, &data);
+	db.iterate(0, db.size(), false, match_iterator, &data);
 }
 
 void BookDatabase::removeAllOfUser(uint16_t user_id)

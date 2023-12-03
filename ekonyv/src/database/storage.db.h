@@ -29,7 +29,7 @@ extern uint8_t STORAGE_HEADER_LENGTHS[sh_size];
 
 class StorageDatabase {
 public:
-	Database<BookStorage, 4> db;
+	Database<BookStorage, EK_STORAGEDB_BUFFER> db;
 
 	using SearchCallback = Callback<void, uint32_t, const BookStorage &>;
 

@@ -1,19 +1,18 @@
 #ifndef EKONYV_DATABASE_H
 #define EKONYV_DATABASE_H
 
-#include "blockfile.h"
-
-#include <CircularBuffer.h>
-#include <type_traits>
+#include "buffered_blockfile.h"
 
 #include "../arduino/logger.h"
 
-enum QueryState : uint8_t {
-	SUCCESS,
-	ERROR
-};
+#include <type_traits>
 
-template <typename Record, size_t CacheSize = 8>
+/**
+ * @brief Defines a fixed-size record database.
+ *
+ * @tparam Record the type of the record
+ */
+template <typename Record, size_t BufferSize>
 class Database {
 	static_assert(std::is_trivial<Record>::value, "Record type must be trivial.");
 
@@ -21,298 +20,189 @@ private:
 	static Logger logger;
 
 public:
-	static constexpr size_t CACHE_SIZE = CacheSize;
-
+	//! @brief Describes a search function that receives the number of the record,
+	//!        the record data itself, and custom arguments. The function should return
+	//!        whether the record matches a given criteria.
 	template <typename... Args>
 	using SearchFnPtr = bool (*)(uint32_t, const Record &, Args...);
 
+	//! @brief Describes an iteration function that receives the number of the record,
+	//!        the record data itself, and custom arguments.
 	template <typename... Args>
 	using IterationFnPtr = void (*)(uint32_t, const Record &, Args...);
 
 	struct QueryResult {
-		QueryState state;
+		bool success; //!< Describes whether the query was successful.
 		uint32_t index;
-		Record value;
+		Record value; //!< The value of the query. Invalid if state is @c ERROR .
 	};
 
 private:
-	enum UpdateType : uint8_t {
-		ADD,
-		REMOVE,
-		MODIFY
-	};
-
-	struct Update {
-		UpdateType type;
-		uint32_t n;
-		Record data;
-	};
-
-private:
-	BlockFile<sizeof(Record)> m_file;
-	CircularBuffer<Update, CacheSize> m_updateCache;
-	uint32_t m_file_num_records;
-	uint32_t m_num_records;
-
-private:
-	struct IndexInfo {
-		enum IndexState : uint8_t {
-			REMOVED,
-			FOUND,
-			IN_FILE
-		};
-
-		IndexState state;
-		uint32_t file_index;
-
-		Record data;
-	};
+	BlockFileBuffer<sizeof(Record), BufferSize> m_file;
 
 public:
-	Database(const char *path) : m_file(path), m_updateCache(), m_file_num_records(0), m_num_records(0)
-	{
-	}
+	Database(const char *path)
+	    : m_file(path) {}
 
 	Database(Database &&other)
-	    : m_updateCache(), m_file(static_cast<BlockFile<sizeof(Record)> &&>(other.m_file)), m_file_num_records(other.m_file_num_records), m_num_records(other.m_num_records)
-	{
-		while (!other.m_updateCache.isEmpty())
-			m_updateCache.push(other.m_updateCache.shift());
-	}
+	    : m_file(static_cast<BlockFileBuffer<sizeof(Record), BufferSize> &&>(other.m_file)) {}
 
-	bool tryLoad()
-	{
-		if (!m_file.open()) {
-			VERBOSE_LOG(logger, "LOAD - Failed loading file ", m_file.getPath());
-			return false;
-		}
+	//! @brief Returns the number of records stored in the database.
+	constexpr uint32_t size() const { return m_file.getRecordCount(); }
 
-		m_num_records = m_file_num_records = m_file.getRecordCount();
+	//! @brief Tries to load the blockfile at the path given on initialization;
+	//!        loads the record count data if it is available, otherwise creates the file.
+	bool initialize() { return m_file.initialize(); }
 
-		m_file.close();
+	//! @brief Tries to save all pending changes to the path given on initialization.
+	//! Processes the cache item by item and executes the corresponding insert/modify/erase commands.
+	//! Failed commands are lost from the cache.
+	//! @returns true if opening the file was successful.
+	bool flush() { return m_file.flush(); }
 
-		VERBOSE_LOG(logger, "LOAD - Got record count: ", m_file_num_records);
-
-		return true;
-	}
-
-	bool trySave()
-	{
-		if (m_updateCache.isEmpty())
-			return true;
-
-		if (!m_file.open()) {
-			VERBOSE_LOG(logger, "SAVE - Failed opening file ", m_file.getPath(), " for saving");
-			return false;
-		}
-
-		VERBOSE_LOG_B(logger, "SAVE - Opened ", m_file.getPath(), " for saving (", m_updateCache.size(), " records)\n");
-
-		while (!m_updateCache.isEmpty()) {
-			const auto update = m_updateCache.shift();
-
-			switch (update.type) {
-				case UpdateType::ADD: {
-					VERBOSE_LOG_C(logger, "Processing add command\n");
-					m_file.append(const_cast<Record *>(&update.data));
-					++m_file_num_records;
-					break;
-				}
-				case UpdateType::REMOVE: {
-					VERBOSE_LOG_C(logger, "Processing remove command at ", update.n, "\n");
-
-					if (update.n >= m_file_num_records) {
-						VERBOSE_LOG_C(logger, "Invalid remove; removing beyond ", m_file_num_records, "\n");
-						break;
-					}
-
-					m_file.erase(update.n);
-
-					--m_file_num_records;
-					break;
-				}
-				case UpdateType::MODIFY: {
-					if (update.n >= m_file_num_records) {
-						VERBOSE_LOG_C(logger, "Invalid modify; modifying beyond ", m_file_num_records, "\n");
-						break;
-					}
-
-					VERBOSE_LOG_C(logger, "Processing modify command at ", update.n, "\n");
-					m_file.modify(update.n, const_cast<Record *>(&update.data));
-					break;
-				}
-			}
-		}
-
-		VERBOSE_LOG_E(logger);
-		m_file.close();
-
-		return true;
-	}
-
+	//! @brief Enqueues an append command into the cache.
+	//! @note To save the data on the disk, @c flush must be called.
+	//! @returns true if more items can be inserted to the cache. When the cache is full,
+	//!          @c flush must be called to empty it.
 	bool append(const Record &data)
 	{
-		m_updateCache.push(Update{
-		    UpdateType::ADD,
-		    0,
-		    data});
+		bool result = m_file.append(&data);
 
-		++m_num_records;
+		if (m_file.isFull())
+			return result && m_file.flush();
 
-		if (m_updateCache.isFull())
-			if (!trySave())
-				return false;
-
-		return true;
+		return result;
 	}
 
+	//! @brief Enqueues a modify command into the cache; modifies the nth record to @c data .
+	//! @note To save the data on the disk, @c flush must be called.
+	//! @returns true if more items can be inserted to the cache. When the cache is full,
+	//!          @c flush must be called to empty it.
 	bool modify(uint32_t n, const Record &data)
 	{
-		m_updateCache.push(Update{
-		    UpdateType::MODIFY,
-		    n,
-		    data});
+		bool result = m_file.modify(n, &data);
 
-		if (m_updateCache.isFull())
-			if (!trySave())
-				return false;
+		if (m_file.isFull())
+			return result && m_file.flush();
 
-		return true;
+		return result;
 	}
 
+	//! @brief Enqueues a remove command into the cache; erases the nth record.
+	//! @note To save the data on the disk, @c flush must be called.
+	//! @returns true if more items can be inserted to the cache. When the cache is full,
+	//!          @c flush must be called to empty it.
 	bool remove(uint32_t n)
 	{
-		m_updateCache.push(Update{
-		    UpdateType::REMOVE,
-		    n,
-		    Record()});
+		bool result = m_file.erase(n);
 
-		--m_num_records;
+		if (m_file.isFull())
+			return result && m_file.flush();
 
-		if (m_updateCache.isFull())
-			if (!trySave())
-				return false;
-
-		return true;
+		return result;
 	}
 
+	//! @brief Tries to look up the n-th record in the buffer. On failure, it reads the file from the storage.
 	QueryResult at(uint32_t n)
 	{
-		if (n >= m_num_records)
-			return QueryResult{QueryState::ERROR, n, Record()};
-
-		if (!trySave())
-			return QueryResult{QueryState::ERROR, n, Record()};
-
-		m_file.open();
-
-		auto result = Record();
-		m_file.readNth(n, &result, sizeof(result));
-
-		m_file.close();
-
-		return QueryResult{
-		    QueryState::SUCCESS, n, result};
-	}
-
-	uint32_t size() const
-	{
-		return m_num_records;
-	}
-
-	template <typename... SearchArgs>
-	QueryResult search(uint32_t start, bool reversed, SearchFnPtr<SearchArgs...> searchFn, SearchArgs... searchArgs)
-	{
-		if (!trySave())
-			return QueryResult{QueryState::ERROR, 0, Record()};
-
 		QueryResult result = {
-		    QueryState::ERROR,
+		    false,
 		    0,
 		    Record()};
 
-		m_file.open();
+		result.success = m_file.at(n, &result.value);
+	}
 
-		for (uint32_t i = reversed ? m_num_records - start : 0;
-		     reversed ? i > 0 : i < m_num_records;
+	template <typename... SearchArgs>
+	//! @brief Returns the first record where @c searchFn returns true.
+	QueryResult search(uint32_t start, bool reversed, SearchFnPtr<SearchArgs...> searchFn, SearchArgs... searchArgs)
+	{
+		if (!m_file.beginTransaction())
+			return QueryResult{false, 0, Record()};
+
+		QueryResult result = {
+		    false,
+		    0,
+		    Record()};
+
+		for (uint32_t i = reversed ? m_file.getRecordCount() - start : 0;
+		     reversed ? i > 0 : i < m_file.getRecordCount();
 		     reversed ? --i : ++i) {
 
 			const auto corrected_i = reversed ? i - 1 : i;
 
-			auto record = Record();
-			m_file.readNth(corrected_i, &record, sizeof(record));
+			const auto [success, n, nthRecord] = at(corrected_i);
+			if (!success)
+				continue;
 
-			if (searchFn(corrected_i, record, searchArgs...)) {
-				result = QueryResult{QueryState::SUCCESS, corrected_i, record};
+			if (searchFn(corrected_i, nthRecord, searchArgs...)) {
+				result = QueryResult{true, corrected_i, nthRecord};
 				break;
 			}
 		}
 
-		m_file.close();
+		m_file.endTransaction();
 
 		return result;
 	}
 
 	template <typename... IterArgs>
-	bool iterate(bool unlockFile, uint32_t start, uint32_t end, bool reversed, IterationFnPtr<IterArgs...> iterFn, IterArgs... iterArgs)
+	//! @brief Runs @c iterFn for every record between @c start and @c end .
+	bool iterate(uint32_t start, uint32_t end, bool reversed, IterationFnPtr<IterArgs...> iterFn, IterArgs... iterArgs)
 	{
-		if (!trySave())
+		if (!m_file.beginTransaction())
 			return false;
 
 		for (uint32_t i = reversed ? end : start;
 		     reversed ? i > start : i < end;
 		     reversed ? --i : ++i) {
-			if (!m_file.is_open())
-				m_file.open();
 
 			const auto corrected_i = reversed ? i - 1 : i;
 
-			auto result = Record();
-			m_file.readNth(corrected_i, &result, sizeof(result));
+			auto [success, n, nthRecord] = at(corrected_i);
+			if (!success)
+				continue;
 
-			if (unlockFile)
-				m_file.close();
-
-			iterFn(corrected_i, result, iterArgs...);
+			iterFn(corrected_i, nthRecord, iterArgs...);
 		}
 
-		if (m_file.is_open())
-			m_file.close();
+		m_file.endTransaction();
 
 		return true;
 	}
 
 	template <typename... SearchArgs>
+	//! @brief Removes all records for which @c searchFn returns true.
 	uint32_t remove_if(uint32_t start, uint32_t end, SearchFnPtr<SearchArgs...> searchFn, SearchArgs... searchArgs)
 	{
-		if (!trySave())
-			return 0;
+		if (!m_file.beginTransaction())
+			return false;
 
 		uint32_t result = 0;
-
-		m_file.open();
 
 		for (uint32_t i = start; i > 0; --i) {
 			const auto corrected_i = i - 1;
 
-			auto record = Record();
-			m_file.readNth(corrected_i, &record, sizeof(record));
+			auto [success, n, nthRecord] = at(corrected_i);
+			if (!success)
+				continue;
 
-			if (searchFn(corrected_i, record, searchArgs...)) {
+			if (searchFn(corrected_i, nthRecord, searchArgs...)) {
 				++result;
-				--m_num_records;
 
-				m_file.erase(corrected_i);
+				if (!remove(corrected_i))
+					if (!flush())
+						break;
 			}
 		}
 
-		m_file.close();
+		m_file.endTransaction();
 
 		return result;
 	}
 };
 
-template <typename Record, size_t CacheSize>
-Logger Database<Record, CacheSize>::logger = Logger("DB");
+template <typename Record, size_t BufferSize>
+Logger Database<Record, BufferSize>::logger = Logger("DB");
 
 #endif // !defined(EKONYV_DATABASE_H)

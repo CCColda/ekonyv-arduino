@@ -116,7 +116,7 @@ int postBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &he
 
 	if (book.id == 0) {
 		const auto similar_book = global::db.book.searchSimilarBook(book);
-		if (similar_book.state == QueryState::SUCCESS) {
+		if (similar_book.success) {
 			HTTPServer::writeStaticHTMLResponse(
 			    HTTPResponse::StaticHTMLResponse{
 			        400, "Bad Request",
@@ -151,7 +151,7 @@ int postBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &he
 	else {
 		const auto book_info = global::db.book.getByID(book.id);
 
-		if (book_info.state == QueryState::ERROR) {
+		if (!book_info.success) {
 			HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_INVALID_BOOK, client);
 			return 0;
 		}
@@ -219,7 +219,7 @@ int deleteBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &
 
 	const auto stored_book = global::db.book.getByID(Str::fixedAtoi<uint16_t>(id.value.c_str(), id.value.length()));
 
-	if (stored_book.state == QueryState::ERROR) {
+	if (!stored_book.success) {
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_INVALID_BOOK, client);
 		return 0;
 	}
@@ -275,7 +275,7 @@ int getAllBooksHandler(const String &path, const Vector<HTTP::ClientHeaderPair> 
 	client.println();
 
 	SendIfPublicArgs args = {&client, session.user_id};
-	global::db.book.db.iterate(false, 0, global::db.book.db.size(), false, sendBookIfPublic, &args);
+	global::db.book.db.iterate(0, global::db.book.db.size(), false, sendBookIfPublic, &args);
 
 	return 0;
 }

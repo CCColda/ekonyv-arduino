@@ -33,7 +33,7 @@ extern uint8_t USER_HEADER_LENGTHS[uh_size];
 
 class UserDatabase {
 public:
-	Database<User, 4> db;
+	Database<User, EK_USERDB_BUFFER> db;
 
 	struct UserResult {
 		bool success;

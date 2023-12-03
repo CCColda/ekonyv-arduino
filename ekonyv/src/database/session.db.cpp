@@ -43,12 +43,12 @@ SessionDatabase::SessionDatabase()
 
 void SessionDatabase::load()
 {
-	db.tryLoad();
+	db.initialize();
 }
 
 void SessionDatabase::save()
 {
-	db.trySave();
+	db.flush();
 }
 
 Session SessionDatabase::start(uint16_t user_id)
@@ -112,7 +112,7 @@ SessionDatabase::SessionInfo SessionDatabase::check(const FixedBuffer<16> &token
 {
 	const auto search_result = db.search(0, true, searchForValidToken, token);
 
-	if (search_result.state == QueryState::ERROR)
+	if (!search_result.success)
 		return SessionInfo{
 		    false,
 		    true,
@@ -130,7 +130,7 @@ SessionDatabase::SessionInfo SessionDatabase::checkRefresh(const FixedBuffer<16>
 {
 	const auto search_result = db.search(0, true, searchForValidRefreshToken, token);
 
-	if (search_result.state == QueryState::ERROR)
+	if (!search_result.success)
 		return SessionInfo{
 		    false,
 		    false,
