@@ -26,7 +26,7 @@ bool Databases::update(unsigned long time)
 	reg_req.update();
 
 	if (time > m_lastSessionUpdate + EK_SESSION_UPDATE_INTERVAL_S) {
-		logger.log("Updating sessions...");
+		VERBOSE_LOG(logger, "Updating sessions...");
 
 		m_lastSessionUpdate = time;
 		session.update();

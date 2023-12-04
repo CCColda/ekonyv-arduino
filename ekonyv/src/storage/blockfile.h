@@ -102,7 +102,7 @@ public:
 	 */
 	bool open()
 	{
-		logger.log("Opening file ", m_path);
+		VERBOSE_LOG(logger, "Opening file ", m_path);
 		m_file = SD.open(m_path, O_CREAT | O_RDWR | O_SYNC);
 
 		if (m_file) {

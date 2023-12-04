@@ -111,7 +111,7 @@ bool UserDatabase::tryRegister(
 	    matchUsername,
 	    username, len);
 
-	if (!searchResult.success) {
+	if (searchResult.success) {
 		return false;
 	}
 

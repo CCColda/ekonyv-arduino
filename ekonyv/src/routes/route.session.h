@@ -20,7 +20,7 @@ int sessionHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &hea
 
 	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
 	client.println("key,value");
-	client.println("status,success");
+	client.println("state,success");
 #endif
 }
 

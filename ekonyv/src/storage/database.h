@@ -111,6 +111,8 @@ public:
 		    Record()};
 
 		result.success = m_file.at(n, &result.value);
+
+		return result;
 	}
 
 	template <typename... SearchArgs>
