@@ -1,23 +1,13 @@
 #include "./string.h"
 
 namespace Str {
-
-const size_t NOT_FOUND = ~(size_t)0;
-
-const char WHITESPACE[6] = "\x20\t\v\n\r";
-const size_t WHITESPACE_LEN = sizeof(WHITESPACE);
-
 size_t find(const char *str, size_t len, char chr, size_t start)
 {
 	if (start >= len)
 		return NOT_FOUND;
 
-	for (size_t i = start; i < len; ++i) {
-		if (str[i] == chr)
-			return i;
-	}
-
-	return NOT_FOUND;
+	const char *ptr = reinterpret_cast<const char *>(memchr(str + start, len - start, chr));
+	return (ptr == NULL) ? NOT_FOUND : ptr - str;
 }
 
 size_t findString(const char *str, size_t len, const char *search, size_t search_len, size_t start)
@@ -90,14 +80,7 @@ String fromBuffer(const char *buf, size_t begin, size_t end)
 
 bool compare(const char *str1, const char *str2, size_t len)
 {
-	for (size_t i = 0; i < len; ++i) {
-		if (str1[i] != str2[i])
-			return false;
-		if (str1[i] == '\0' || str2[i] == '\0')
-			return false;
-	}
-
-	return true;
+	return memcmp(str1, str2, len) == 0;
 }
 
 size_t compareToMap(const char *str, size_t strlen, const char *map[], size_t maplen)

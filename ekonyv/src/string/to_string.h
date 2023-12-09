@@ -6,56 +6,41 @@
 
 #include "../types/fixedbuffer.h"
 
-template <typename... Args>
-String str(Args... args)
-{
-	String result;
-
-	(result.operator+=(args), ...);
-
-	return result;
-}
-
-template <typename T>
-String number_to_padded_string(T v, uint8_t pad_chars)
-{
-	String result = String(v, 10);
-
-	for (uint32_t i = result.length(); i < pad_chars; ++i)
-		result = '0' + result;
-
-	return result;
-}
-
+//! @brief Converts an IPAddress to a 'xxx.xxx.xxx.xxx' formatted string.
 String ip_to_string(const IPAddress &address);
+
+//! @brief Converts a byte to a hexadecimal string.
 String byte_to_string(const byte &b);
+
+//! @brief Converts a hexadecimal byte string (format XX) into a byte. The string may be upper or lowercase.
 byte string_to_byte(const char *str, size_t size);
+
+//! @brief Converts a 6-byte mac address to a \c XX:XX:XX:XX formatted string.
 String mac_to_string(const byte *mac);
+
+//! @brief Escapes all non-ascii characters in a string.
 [[maybe_unused]] String string_to_escaped_string(const String &str);
+
+//! @brief Escapes all \c ["<>] characters in a string to their HTML equivalents.
 String string_to_html_escaped_string(const String &str);
 
-template <size_t N>
-String fixed_buffer_to_string(const FixedBuffer<N> &buf)
-{
-	String result;
-	result.reserve(N * 2);
+template <typename... Args>
+//! @brief Concatanates @c args into a string, from left to right.
+String str(Args... args);
 
-	for (size_t i = 0; i < N; ++i)
-		result += byte_to_string(buf.data[i]);
-
-	return result;
-}
+template <typename IntegerType>
+//! @brief Converts the number @c v to a string, pads it with '0' characters from the left until the length is @c pad_chars .
+String number_to_padded_string(IntegerType v, uint8_t pad_chars);
 
 template <size_t N>
-bool string_to_fixed_buffer(const char *str, size_t len, FixedBuffer<N> &output)
-{
-	if (len < (N * 2) || (len % 2) != 0)
-		return false;
+//! @brief Converts a fixed buffer of @c N bytes to a string with byte formatting.
+String fixed_buffer_to_string(const FixedBuffer<N> &buf);
 
-	for (size_t i = 0; i < N; i++)
-		output.data[i] = string_to_byte(str + i * 2, 2);
+template <size_t N>
+//! @brief Converts a byte-formatted string to a fixed buffer of length @c N .
+//! @returns true if the length of the string is correct and data has been written to @c output .
+bool string_to_fixed_buffer(const char *str, size_t len, FixedBuffer<N> &output);
 
-	return true;
-}
+#include "to_string_impl.h"
 
 #endif // !defined(EKONYV_TO_STRING_H)
