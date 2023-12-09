@@ -4,11 +4,11 @@
 #include "buffered_blockfile_def.h"
 
 template <size_t RecordSize, size_t BufferSize>
-BlockFileBuffer<RecordSize, BufferSize>::BlockFileBuffer(const char *path)
+BufferedBlockfile<RecordSize, BufferSize>::BufferedBlockfile(const char *path)
     : m_file(path), m_buffer(m_buffer_data), m_num_records(0) {}
 
 template <size_t RecordSize, size_t BufferSize>
-BlockFileBuffer<RecordSize, BufferSize>::BlockFileBuffer(BlockFileBuffer &&filebuffer)
+BufferedBlockfile<RecordSize, BufferSize>::BufferedBlockfile(BufferedBlockfile &&filebuffer)
     : m_file(static_cast<BlockFile<RecordSize> &&>(filebuffer.m_file)),
       m_buffer(m_buffer_data), m_num_records(filebuffer.m_num_records)
 {
@@ -16,7 +16,7 @@ BlockFileBuffer<RecordSize, BufferSize>::BlockFileBuffer(BlockFileBuffer &&fileb
 }
 
 template <size_t RecordSize, size_t BufferSize>
-bool BlockFileBuffer<RecordSize, BufferSize>::initialize()
+bool BufferedBlockfile<RecordSize, BufferSize>::initialize()
 {
 	if (!m_file.beginTransaction()) {
 		VERBOSE_LOG(logger, "LOAD - Failed loading file ", m_file.getPath());
@@ -31,7 +31,7 @@ bool BlockFileBuffer<RecordSize, BufferSize>::initialize()
 }
 
 template <size_t RecordSize, size_t BufferSize>
-bool BlockFileBuffer<RecordSize, BufferSize>::flush()
+bool BufferedBlockfile<RecordSize, BufferSize>::flush()
 {
 	if (!m_file.beginTransaction()) {
 		return false;
@@ -61,7 +61,7 @@ bool BlockFileBuffer<RecordSize, BufferSize>::flush()
 }
 
 template <size_t RecordSize, size_t BufferSize>
-bool BlockFileBuffer<RecordSize, BufferSize>::append(const void *data)
+bool BufferedBlockfile<RecordSize, BufferSize>::append(const void *data)
 {
 	auto update = Update{
 	    UpdateType::APPEND,
@@ -78,7 +78,7 @@ bool BlockFileBuffer<RecordSize, BufferSize>::append(const void *data)
 }
 
 template <size_t RecordSize, size_t BufferSize>
-bool BlockFileBuffer<RecordSize, BufferSize>::modify(uint32_t n, const void *data)
+bool BufferedBlockfile<RecordSize, BufferSize>::modify(uint32_t n, const void *data)
 {
 	if (n >= m_num_records)
 		return false;
@@ -96,7 +96,7 @@ bool BlockFileBuffer<RecordSize, BufferSize>::modify(uint32_t n, const void *dat
 }
 
 template <size_t RecordSize, size_t BufferSize>
-bool BlockFileBuffer<RecordSize, BufferSize>::erase(uint32_t n)
+bool BufferedBlockfile<RecordSize, BufferSize>::erase(uint32_t n)
 {
 	if (n >= m_num_records)
 		return false;
@@ -115,7 +115,7 @@ bool BlockFileBuffer<RecordSize, BufferSize>::erase(uint32_t n)
 }
 
 template <size_t RecordSize, size_t BufferSize>
-bool BlockFileBuffer<RecordSize, BufferSize>::at(uint32_t n, void *out_ptr)
+bool BufferedBlockfile<RecordSize, BufferSize>::at(uint32_t n, void *out_ptr)
 {
 	if (n >= m_num_records)
 		return false;
@@ -163,7 +163,7 @@ bool BlockFileBuffer<RecordSize, BufferSize>::at(uint32_t n, void *out_ptr)
 }
 
 template <size_t RecordSize, size_t BufferSize>
-bool BlockFileBuffer<RecordSize, BufferSize>::readFromFile(uint32_t n, void *out_ptr)
+bool BufferedBlockfile<RecordSize, BufferSize>::readFromFile(uint32_t n, void *out_ptr)
 {
 	if (!m_file.beginTransaction()) {
 		return false;
@@ -176,7 +176,7 @@ bool BlockFileBuffer<RecordSize, BufferSize>::readFromFile(uint32_t n, void *out
 }
 
 template <size_t RecordSize, size_t BufferSize>
-bool BlockFileBuffer<RecordSize, BufferSize>::tryEraseFromBuffer(uint32_t n)
+bool BufferedBlockfile<RecordSize, BufferSize>::tryEraseFromBuffer(uint32_t n)
 {
 	uint32_t file_num_records = m_file.getRecordCount();
 	bool append_removed = false;

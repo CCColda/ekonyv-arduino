@@ -106,10 +106,7 @@ bool UserDatabase::tryRegister(
 	if (len > sizeof(User::username))
 		return false;
 
-	const auto searchResult = db.search(
-	    0, false,
-	    matchUsername,
-	    username, len);
+	const auto searchResult = db.search(0, matchUsername, username, len);
 
 	if (searchResult.success) {
 		return false;
@@ -133,7 +130,7 @@ UserDatabase::UserResult UserDatabase::tryLogin(
     const FixedBuffer<32> &passwordHash)
 {
 	const auto searchResult = db.search(
-	    0, false,
+	    0,
 	    matchUsernamePassword,
 	    username, len, passwordHash);
 
@@ -145,12 +142,7 @@ UserDatabase::UserResult UserDatabase::tryLogin(
 
 decltype(UserDatabase::db)::QueryResult UserDatabase::getByID(uint16_t id)
 {
-	const auto searchResult = db.search(
-	    0, false,
-	    matchID,
-	    id);
-
-	return searchResult;
+	return db.search(0, matchID, id);
 }
 
 void UserDatabase::match(const Vector<Search::SearchTerm> &search, SearchCallback callback)
@@ -159,5 +151,5 @@ void UserDatabase::match(const Vector<Search::SearchTerm> &search, SearchCallbac
 	    search,
 	    callback};
 
-	db.iterate(0, db.size(), false, match_iterator, &data);
+	db.iterate(0, db.size(), match_iterator, &data);
 }

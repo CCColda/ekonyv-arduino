@@ -161,7 +161,7 @@ int getAllUsersHandler(const String &path, const Vector<HTTP::ClientHeaderPair> 
 	}
 	client.println();
 
-	global::db.user.db.iterate(0, global::db.book.db.size(), false, sendUser, &client);
+	global::db.user.db.iterate(0, global::db.book.db.size(), sendUser, &client);
 
 	return 0;
 }

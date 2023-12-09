@@ -12,7 +12,7 @@
  * @tparam BufferSize The number of operations to buffer.
  */
 template <size_t RecordSize, size_t BufferSize>
-class BlockFileBuffer {
+class BufferedBlockfile {
 private:
 	enum UpdateType : uint8_t {
 		APPEND,
@@ -35,12 +35,12 @@ private:
 
 public:
 	//! @brief Initializes the buffer, sets the underlying blockfile's path.
-	BlockFileBuffer(const char *path);
+	BufferedBlockfile(const char *path);
 
 	//! @brief Moves the buffer and file data from another object.
-	BlockFileBuffer(BlockFileBuffer &&filebuffer);
+	BufferedBlockfile(BufferedBlockfile &&filebuffer);
 
-	~BlockFileBuffer() = default;
+	~BufferedBlockfile() = default;
 
 	//! @brief Returns the number of records stored in the database.
 	constexpr uint32_t getRecordCount() const { return m_num_records; }

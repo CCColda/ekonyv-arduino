@@ -100,22 +100,12 @@ uint16_t StorageDatabase::add(const BookStorage &partial_storage)
 
 decltype(StorageDatabase::db)::QueryResult StorageDatabase::getByID(uint16_t id)
 {
-	const auto searchResult = db.search(
-	    0, false,
-	    matchID,
-	    id);
-
-	return searchResult;
+	return db.search(0, matchID, id);
 }
 
 decltype(StorageDatabase::db)::QueryResult StorageDatabase::searchSimilarStorage(const BookStorage &partial_storage)
 {
-	const auto searchResult = db.search(
-	    0, false,
-	    matchSimilar,
-	    &partial_storage);
-
-	return searchResult;
+	return db.search(0, matchSimilar, &partial_storage);
 }
 
 void StorageDatabase::match(const Vector<Search::SearchTerm> &search, SearchCallback callback)
@@ -124,5 +114,5 @@ void StorageDatabase::match(const Vector<Search::SearchTerm> &search, SearchCall
 	    search,
 	    callback};
 
-	db.iterate(0, db.size(), false, match_iterator, &data);
+	db.iterate(0, db.size(), match_iterator, &data);
 }

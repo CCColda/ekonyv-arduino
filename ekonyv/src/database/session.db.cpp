@@ -110,7 +110,7 @@ void SessionDatabase::update()
 
 SessionDatabase::SessionInfo SessionDatabase::check(const FixedBuffer<16> &token)
 {
-	const auto search_result = db.search(0, true, searchForValidToken, token);
+	const auto search_result = db.search_reverse(0, searchForValidToken, token);
 
 	if (!search_result.success)
 		return SessionInfo{
@@ -128,7 +128,7 @@ SessionDatabase::SessionInfo SessionDatabase::check(const FixedBuffer<16> &token
 
 SessionDatabase::SessionInfo SessionDatabase::checkRefresh(const FixedBuffer<16> &token)
 {
-	const auto search_result = db.search(0, true, searchForValidRefreshToken, token);
+	const auto search_result = db.search_reverse(0, searchForValidRefreshToken, token);
 
 	if (!search_result.success)
 		return SessionInfo{

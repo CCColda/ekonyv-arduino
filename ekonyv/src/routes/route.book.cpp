@@ -275,7 +275,7 @@ int getAllBooksHandler(const String &path, const Vector<HTTP::ClientHeaderPair> 
 	client.println();
 
 	SendIfPublicArgs args = {&client, session.user_id};
-	global::db.book.db.iterate(0, global::db.book.db.size(), false, sendBookIfPublic, &args);
+	global::db.book.db.iterate(0, global::db.book.db.size(), sendBookIfPublic, &args);
 
 	return 0;
 }

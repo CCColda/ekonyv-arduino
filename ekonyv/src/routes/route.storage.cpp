@@ -187,7 +187,7 @@ int getAllStoragesHandler(const String &path, const Vector<HTTP::ClientHeaderPai
 	}
 	client.println();
 
-	global::db.storage.db.iterate(0, global::db.book.db.size(), false, sendBookStorage, &client);
+	global::db.storage.db.iterate(0, global::db.book.db.size(), sendBookStorage, &client);
 
 	return 0;
 }

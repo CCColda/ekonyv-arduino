@@ -9,7 +9,7 @@
 #include <SD.h>
 // clang-format on
 #else
-#include "../storage/mocksd.h"
+#include "../mocksd/mocksd.h"
 #warning "Using mock SD library"
 #endif
 

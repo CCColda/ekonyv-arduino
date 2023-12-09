@@ -143,7 +143,7 @@ void BookDatabase::match(const Vector<Search::SearchTerm> &search, SearchCallbac
 	    search,
 	    callback};
 
-	db.iterate(0, db.size(), false, match_iterator, &data);
+	db.iterate(0, db.size(), match_iterator, &data);
 }
 
 void BookDatabase::removeAllOfUser(uint16_t user_id)
@@ -176,10 +176,10 @@ uint32_t BookDatabase::add(const Book &partial_book)
 
 decltype(BookDatabase::db)::QueryResult BookDatabase::searchSimilarBook(const Book &partial_book)
 {
-	return db.search(0, true, similar_search, &partial_book);
+	return db.search_reverse(0, similar_search, &partial_book);
 }
 
 decltype(BookDatabase::db)::QueryResult BookDatabase::getByID(uint32_t id)
 {
-	return db.search(0, true, id_search, id);
+	return db.search_reverse(0, id_search, id);
 }
