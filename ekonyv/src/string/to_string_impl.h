@@ -44,13 +44,13 @@ String fixed_buffer_to_string(const FixedBuffer<N> &buf)
 template <size_t N>
 //! @brief Converts a byte-formatted string to a fixed buffer of length @c N .
 //! @returns true if the length of the string is correct and data has been written to @c output .
-bool string_to_fixed_buffer(const char *str, size_t len, FixedBuffer<N> &output)
+bool string_to_fixed_buffer(const SizedString &str, FixedBuffer<N> &output)
 {
-	if (len < (N * 2) || (len % 2) != 0)
+	if (str.len < (N * 2) || (str.len % 2) != 0)
 		return false;
 
 	for (size_t i = 0; i < N; i++)
-		output.data[i] = string_to_byte(str + i * 2, 2);
+		output.data[i] = string_to_byte(SizedString{str.ptr + i * 2, 2});
 
 	return true;
 }

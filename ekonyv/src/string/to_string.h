@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include "../types/fixedbuffer.h"
+#include "../types/sized_string.h"
 
 //! @brief Converts an IPAddress to a 'xxx.xxx.xxx.xxx' formatted string.
 String ip_to_string(const IPAddress &address);
@@ -13,7 +14,7 @@ String ip_to_string(const IPAddress &address);
 String byte_to_string(const byte &b);
 
 //! @brief Converts a hexadecimal byte string (format XX) into a byte. The string may be upper or lowercase.
-byte string_to_byte(const char *str, size_t size);
+byte string_to_byte(const SizedString &str);
 
 //! @brief Converts a 6-byte mac address to a \c XX:XX:XX:XX formatted string.
 String mac_to_string(const byte *mac);
@@ -39,7 +40,7 @@ String fixed_buffer_to_string(const FixedBuffer<N> &buf);
 template <size_t N>
 //! @brief Converts a byte-formatted string to a fixed buffer of length @c N .
 //! @returns true if the length of the string is correct and data has been written to @c output .
-bool string_to_fixed_buffer(const char *str, size_t len, FixedBuffer<N> &output);
+bool string_to_fixed_buffer(const SizedString &str, FixedBuffer<N> &output);
 
 #include "to_string_impl.h"
 

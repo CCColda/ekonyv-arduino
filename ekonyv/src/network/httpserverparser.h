@@ -7,6 +7,8 @@
 
 #include "../types/callback.h"
 
+#include "../types/sized_string.h"
+
 #include <Ethernet.h>
 #include <Vector.h>
 
@@ -31,8 +33,8 @@ private:
 	HTTP::ServerHeaderPair m_header_buf[HTTP::ServerHeader::sh_size];
 
 private:
-	static HTTP::ServerResponseProps extractResponseProps(const char *requestLine, index_t len);
-	static HTTP::ServerHeaderPair extractHeader(const char *requestLine, index_t len);
+	static HTTP::ServerResponseProps extractResponseProps(const SizedString &request_line);
+	static HTTP::ServerHeaderPair extractHeader(const SizedString &request_line);
 
 public:
 	HTTP::ServerResponseProps props;

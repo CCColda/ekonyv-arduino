@@ -28,8 +28,8 @@ int LoginRoute::loginHandler(const String &path, const Vector<HTTP::ClientHeader
 	if (!password)
 		return password.sendMissingResponse(client);
 
-	const auto username_decoded = Str::urlDecode(username.value.c_str(), username.value.length());
-	const auto password_decoded = Str::urlDecode(password.value.c_str(), password.value.length());
+	const auto username_decoded = Str::urlDecode(SizedString::fromString(username.value));
+	const auto password_decoded = Str::urlDecode(SizedString::fromString(password.value));
 
 	if (username_decoded.length() == 0 || username_decoded.length() > 64 ||
 	    password_decoded.length() == 0 || password_decoded.length() > 32) {
@@ -74,7 +74,7 @@ int LoginRoute::renewHandler(const String &path, const Vector<HTTP::ClientHeader
 	const auto renew_token = ParameterMiddleware("refresh", path, prep);
 
 	FixedBuffer<16> renew_token_value;
-	string_to_fixed_buffer<16>(renew_token.value.c_str(), renew_token.value.length(), renew_token_value);
+	string_to_fixed_buffer<16>(SizedString::fromString(renew_token.value), renew_token_value);
 
 	const auto session = global::db.session.checkRefresh(renew_token_value);
 

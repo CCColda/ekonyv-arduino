@@ -5,42 +5,42 @@
 
 /* private */ Logger HTTPServerParser::logger = Logger("HTCP");
 
-/* private static */ HTTP::ServerResponseProps HTTPServerParser::extractResponseProps(const char *requestLine, index_t len)
+/* private static */ HTTP::ServerResponseProps HTTPServerParser::extractResponseProps(const SizedString &request_line)
 {
-	const auto firstSpace = Str::find(requestLine, len, ' ');
+	const auto firstSpace = Str::find(request_line, ' ');
 
 	if (firstSpace == Str::NOT_FOUND)
 		return HTTP::ServerResponseProps{400};
 
-	const auto secondSpace = Str::find(requestLine, len, ' ', firstSpace + 1);
+	const auto secondSpace = Str::find(request_line, ' ', firstSpace + 1);
 
 	if (secondSpace == Str::NOT_FOUND)
 		return HTTP::ServerResponseProps{400};
 
 	return HTTP::ServerResponseProps{
-	    Str::fixedAtoi<index_t>(requestLine + firstSpace + 1, secondSpace - firstSpace - 1)};
+	    Str::fixedAtoi<index_t>(SizedString{request_line.ptr + firstSpace + 1, secondSpace - firstSpace - 1})};
 }
 
-/* private static */ HTTP::ServerHeaderPair HTTPServerParser::extractHeader(const char *requestLine, index_t len)
+/* private static */ HTTP::ServerHeaderPair HTTPServerParser::extractHeader(const SizedString &request_line)
 {
-	const auto colon = Str::find(requestLine, len, ':');
+	const auto colon = Str::find(request_line, ':');
 
 	if (colon == Str::NOT_FOUND)
 		return HTTP::ServerHeaderPair{HTTP::ServerHeader::sh_unknown, String()};
 
-	const size_t map_index = Str::compareToMap(requestLine, colon, HTTP::SERVER_HEADERS, HTTP::ServerHeader::sh_size);
+	const size_t map_index = Str::compareToMap(SizedString{request_line.ptr, colon}, HTTP::SERVER_HEADERS, HTTP::ServerHeader::sh_size);
 
 	if (map_index == Str::NOT_FOUND)
 		return HTTP::ServerHeaderPair{HTTP::ServerHeader::sh_unknown, String()};
 
-	const size_t first_non_whitespace = Str::findFirstNotOf(requestLine, len, Str::WHITESPACE, Str::WHITESPACE_LEN, colon + 1);
+	const size_t first_non_whitespace = Str::findFirstNotOf(request_line, Str::WHITESPACE, colon + 1);
 
 	if (first_non_whitespace == Str::NOT_FOUND)
 		return HTTP::ServerHeaderPair{HTTP::ServerHeader::sh_unknown, String()};
 
 	return HTTP::ServerHeaderPair{
 	    (HTTP::ServerHeader)(uint8_t)map_index,
-	    Str::fromBuffer(requestLine, first_non_whitespace, len)};
+	    Str::fromBuffer(request_line.ptr, first_non_whitespace, request_line.len)};
 }
 
 HTTPServerParser::HTTPServerParser()
@@ -63,23 +63,25 @@ HTTP::ParseResult HTTPServerParser::parseBlock(EthernetClient &client)
 
 	m_buffer_saturation = bytes_read;
 
+	const auto buffer_as_string = SizedString{m_buffer, m_buffer_saturation};
+
 	if (!flags.props_parsed) {
 		flags.props_parsed = true;
 
-		const auto props_end = Str::find(m_buffer, bytes_read, '\n');
+		const auto props_end = Str::find(SizedString{m_buffer, bytes_read}, '\n');
 		if (props_end == Str::NOT_FOUND) {
 			logger.error("Invalid response from ", ip_to_string(client.remoteIP()), "; URI is too long");
 			return HTTP::FAIL;
 		}
 
-		props = extractResponseProps(m_buffer, props_end);
+		props = extractResponseProps(SizedString{m_buffer, props_end});
 		memmove(m_buffer, m_buffer + props_end + 1, bytes_read - props_end - 1);
 
 		m_buffer_saturation -= props_end + 1;
 	}
 
 	if (!flags.headers_parsed) {
-		size_t new_line_char = Str::find(m_buffer, m_buffer_saturation, '\n');
+		size_t new_line_char = Str::find(buffer_as_string, '\n');
 		index_t offset = 0;
 		while (new_line_char != Str::NOT_FOUND && new_line_char != 0) {
 			const index_t extraction_length = m_buffer[new_line_char - 1] == '\r' ? new_line_char - 1 : new_line_char;
@@ -89,13 +91,13 @@ HTTP::ParseResult HTTPServerParser::parseBlock(EthernetClient &client)
 				break;
 			}
 
-			const auto header = extractHeader(m_buffer + offset, extraction_length - offset);
+			const auto header = extractHeader(SizedString{m_buffer + offset, extraction_length - offset});
 
 			if (header.name != HTTP::ServerHeader::sh_unknown)
 				headers.push_back(header);
 
 			offset = new_line_char + 1;
-			new_line_char = Str::find(m_buffer, m_buffer_saturation, '\n', offset);
+			new_line_char = Str::find(buffer_as_string, '\n', offset);
 		}
 
 		memmove(m_buffer, m_buffer + new_line_char + 1, m_buffer_saturation - new_line_char - 1);
@@ -111,7 +113,7 @@ HTTP::ParseResult HTTPServerParser::parseBlock(EthernetClient &client)
 		}
 
 		if (body_parse_cb) {
-			const size_t last_newline_in_buffer = Str::findLast(m_buffer, m_buffer_saturation, '\n');
+			const size_t last_newline_in_buffer = Str::findLast(buffer_as_string, '\n');
 			if (last_newline_in_buffer == 0 || last_newline_in_buffer == Str::NOT_FOUND || last_newline_in_buffer >= m_buffer_saturation) {
 				logger.error("Invalid request from ", ip_to_string(client.remoteIP()), "; line over " __EK_MACRO_STRING(EK_HTTP_BUFFER_SIZE) " chars");
 				return HTTP::FAIL;

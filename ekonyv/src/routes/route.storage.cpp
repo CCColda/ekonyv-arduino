@@ -16,10 +16,10 @@ BookStorage getStorageFromParameters(const String &path, uint32_t prep)
 	const auto id = ParameterMiddleware(STORAGE_HEADERS[SH_ID], STORAGE_HEADER_LENGTHS[SH_ID], path, prep);
 	const auto name = ParameterMiddleware(STORAGE_HEADERS[SH_NAME], STORAGE_HEADER_LENGTHS[SH_NAME], path, prep);
 
-	result.id = id ? Str::fixedAtoi<uint32_t>(id.value.c_str(), id.value.length()) : 0;
+	result.id = id ? Str::fixedAtoi<uint32_t>(SizedString::fromString(id.value)) : 0;
 
 	if (name) {
-		const auto decoded = Str::urlDecode(name.value.c_str(), name.value.length());
+		const auto decoded = Str::urlDecode(SizedString::fromString(name.value));
 
 		result.name_len = min(decoded.length(), sizeof(BookStorage::name));
 		memcpy(result.name, decoded.c_str(), result.name_len);
@@ -134,7 +134,7 @@ int deleteStorageHandler(const String &path, const Vector<HTTP::ClientHeaderPair
 	if (!id)
 		return id.sendMissingResponse(client);
 
-	const auto stored_storage = global::db.storage.getByID(Str::fixedAtoi<uint16_t>(id.value.c_str(), id.value.length()));
+	const auto stored_storage = global::db.storage.getByID(Str::fixedAtoi<uint16_t>(SizedString::fromString(id.value)));
 
 	if (!stored_storage.success) {
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_INVALID_STORAGE, client);

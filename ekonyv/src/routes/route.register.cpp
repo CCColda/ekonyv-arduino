@@ -70,8 +70,8 @@ int registerHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &he
 	if (!password)
 		return password.sendMissingResponse(client);
 
-	const auto username_decoded = Str::urlDecode(username.value.c_str(), username.value.length());
-	const auto password_decoded = Str::urlDecode(password.value.c_str(), password.value.length());
+	const auto username_decoded = Str::urlDecode(SizedString::fromString(username.value));
+	const auto password_decoded = Str::urlDecode(SizedString::fromString(password.value));
 
 	if (code_param.value.length() != 4 || username_decoded.length() == 0 ||
 	    username_decoded.length() > 64 || password_decoded.length() == 0 ||

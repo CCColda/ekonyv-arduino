@@ -23,18 +23,17 @@ ParameterMiddleware::ParameterMiddleware(
 	if (start_index >= path.length())
 		return;
 
-	const char *const adjusted_path = path.c_str() + start_index;
-	const size_t adjusted_len = path.length() - start_index;
+	const auto adjusted_path = SizedString{path.c_str() + start_index, path.length() - start_index};
 
 	char *const parameter_extended = new char[len + 1];
 	memcpy(parameter_extended, parameter, len);
 	parameter_extended[len] = '=';
 
-	uint32_t param_index = Str::findString(adjusted_path, adjusted_len, parameter_extended, len + 1, 0);
+	uint32_t param_index = Str::findString(adjusted_path, SizedString{parameter_extended, len + 1}, 0);
 
 	if (param_index != 0 && param_index != Str::NOT_FOUND) {
-		while (adjusted_path[param_index - 1] != '&') {
-			param_index = Str::findString(adjusted_path, adjusted_len, parameter_extended, len + 1, param_index + len + 1);
+		while (adjusted_path.ptr[param_index - 1] != '&') {
+			param_index = Str::findString(adjusted_path, SizedString{parameter_extended, len + 1}, param_index + len + 1);
 
 			if (param_index == Str::NOT_FOUND)
 				break;
@@ -48,13 +47,13 @@ ParameterMiddleware::ParameterMiddleware(
 
 	const auto param_value_start = param_index + len + 1;
 
-	const auto next_param_or_end = Str::find(adjusted_path, adjusted_len, '&', param_value_start);
+	const auto next_param_or_end = Str::find(adjusted_path, '&', param_value_start);
 
 	valid = true;
 	value = String(
-	    adjusted_path + param_value_start,
+	    adjusted_path.ptr + param_value_start,
 	    next_param_or_end == Str::NOT_FOUND
-	        ? adjusted_len - param_value_start
+	        ? adjusted_path.len - param_value_start
 	        : next_param_or_end - param_value_start);
 }
 

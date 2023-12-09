@@ -27,36 +27,36 @@ Book getBookFromParameters(const String &path, uint32_t prep)
 	const auto flags = ParameterMiddleware(BOOK_HEADERS[BH_FLAGS], BOOK_HEADER_LENGTHS[BH_FLAGS], path, prep);
 	const auto id = ParameterMiddleware(BOOK_HEADERS[BH_ID], BOOK_HEADER_LENGTHS[BH_ID], path, prep);
 
-	result.id = id ? Str::fixedAtoi<uint32_t>(id.value.c_str(), id.value.length()) : 0;
+	result.id = id ? Str::fixedAtoi<uint32_t>(SizedString::fromString(id.value)) : 0;
 
-	result.in = in ? Str::fixedAtoi<uint64_t>(in.value.c_str(), in.value.length()) : 0;
-	result.storage_id = storage_id ? Str::fixedAtoi<uint16_t>(storage_id.value.c_str(), storage_id.value.length()) : 0;
+	result.in = in ? Str::fixedAtoi<uint64_t>(SizedString::fromString(in.value)) : 0;
+	result.storage_id = storage_id ? Str::fixedAtoi<uint16_t>(SizedString::fromString(storage_id.value)) : 0;
 
-	result.flags = flags ? Str::fixedAtoi<uint8_t>(flags.value.c_str(), flags.value.length()) : 0u;
+	result.flags = flags ? Str::fixedAtoi<uint8_t>(SizedString::fromString(flags.value)) : 0u;
 
 	if (title) {
-		const auto decoded = Str::urlDecode(title.value.c_str(), title.value.length());
+		const auto decoded = Str::urlDecode(SizedString::fromString(title.value));
 
 		result.title_len = min(decoded.length(), sizeof(Book::title));
 		memcpy(result.title, decoded.c_str(), result.title_len);
 	}
 
 	if (authors) {
-		const auto decoded = Str::urlDecode(authors.value.c_str(), authors.value.length());
+		const auto decoded = Str::urlDecode(SizedString::fromString(authors.value));
 
 		result.authors_len = min(decoded.length(), sizeof(Book::authors));
 		memcpy(result.authors, decoded.c_str(), result.authors_len);
 	}
 
 	if (published) {
-		const auto decoded = Str::urlDecode(published.value.c_str(), published.value.length());
+		const auto decoded = Str::urlDecode(SizedString::fromString(published.value));
 
 		result.published_len = min(decoded.length(), sizeof(Book::published));
 		memcpy(result.published, decoded.c_str(), result.published_len);
 	}
 
 	if (attributes) {
-		const auto decoded = Str::urlDecode(attributes.value.c_str(), attributes.value.length());
+		const auto decoded = Str::urlDecode(SizedString::fromString(attributes.value));
 
 		result.attributes_len = min(decoded.length(), sizeof(Book::attributes));
 		memcpy(result.attributes, decoded.c_str(), result.attributes_len);
@@ -217,7 +217,7 @@ int deleteBookHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &
 	if (!id)
 		return id.sendMissingResponse(client);
 
-	const auto stored_book = global::db.book.getByID(Str::fixedAtoi<uint16_t>(id.value.c_str(), id.value.length()));
+	const auto stored_book = global::db.book.getByID(Str::fixedAtoi<uint16_t>(SizedString::fromString(id.value)));
 
 	if (!stored_book.success) {
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_INVALID_BOOK, client);

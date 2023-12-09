@@ -3,12 +3,14 @@
 
 #include <Arduino.h>
 
-namespace Str {
-//! @brief Converts str into an url encoded string.
-String urlEncode(const char *str, size_t len);
+#include "../types/sized_string.h"
 
-//! @brief Decodes str from an url encoded string.
-String urlDecode(const char *str, size_t len);
+namespace Str {
+//! @brief Converts @c str into an url encoded string.
+String urlEncode(const SizedString &str);
+
+//! @brief Decodes @c str from an url encoded string.
+String urlDecode(const SizedString &str);
 } // namespace Str
 
 #endif // !defined(EKONYV_URL_H)

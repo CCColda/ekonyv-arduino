@@ -5,42 +5,42 @@
 
 /* private */ Logger HTTPClientParser::logger = Logger("HTCP");
 
-/* private static */ HTTP::ClientRequestProps HTTPClientParser::extractRequestProps(const char *requestLine, index_t len)
+/* private static */ HTTP::ClientRequestProps HTTPClientParser::extractRequestProps(const SizedString &request_line)
 {
-	const auto firstSpace = Str::find(requestLine, len, ' ');
-	const auto secondSpace = Str::findLast(requestLine, len, ' ');
+	const auto firstSpace = Str::find(request_line, ' ');
+	const auto secondSpace = Str::findLast(request_line, ' ');
 
 	if (firstSpace == Str::NOT_FOUND || secondSpace == Str::NOT_FOUND)
 		return HTTP::ClientRequestProps{HTTP::Method::m_unknown, String()};
 
-	const size_t method_index = Str::compareToMap(requestLine, firstSpace, HTTP::METHOD_MAP, HTTP::Method::m_size);
+	const size_t method_index = Str::compareToMap(SizedString{request_line.ptr, firstSpace}, HTTP::METHOD_MAP, HTTP::Method::m_size);
 
 	if (method_index == Str::NOT_FOUND)
 		return HTTP::ClientRequestProps{HTTP::Method::m_unknown, String()};
 
 	return HTTP::ClientRequestProps{
 	    (HTTP::Method)(uint8_t)method_index,
-	    Str::fromBuffer(requestLine, firstSpace + 1, secondSpace)};
+	    Str::fromBuffer(request_line.ptr, firstSpace + 1, secondSpace)};
 }
 
-/* private static */ HTTP::ClientHeaderPair HTTPClientParser::extractHeader(const char *requestLine, index_t len)
+/* private static */ HTTP::ClientHeaderPair HTTPClientParser::extractHeader(const SizedString &request_line)
 {
-	const auto colon = Str::find(requestLine, len, ':');
+	const auto colon = Str::find(request_line, ':');
 	if (colon == Str::NOT_FOUND)
 		return HTTP::ClientHeaderPair{HTTP::ClientHeader::ch_unknown, String()};
 
-	const size_t map_index = Str::compareToMap(requestLine, colon, HTTP::CLIENT_HEADERS, HTTP::ClientHeader::ch_size);
+	const size_t map_index = Str::compareToMap(SizedString{request_line.ptr, colon}, HTTP::CLIENT_HEADERS, HTTP::ClientHeader::ch_size);
 
 	if (map_index == Str::NOT_FOUND)
 		return HTTP::ClientHeaderPair{HTTP::ClientHeader::ch_unknown, String()};
 
-	const size_t first_non_whitespace = Str::findFirstNotOf(requestLine, len, Str::WHITESPACE, Str::WHITESPACE_LEN, colon + 1);
+	const size_t first_non_whitespace = Str::findFirstNotOf(request_line, Str::WHITESPACE, colon + 1);
 	if (first_non_whitespace == Str::NOT_FOUND)
 		return HTTP::ClientHeaderPair{HTTP::ClientHeader::ch_unknown, String()};
 
 	return HTTP::ClientHeaderPair{
 	    (HTTP::ClientHeader)(uint8_t)map_index,
-	    Str::fromBuffer(requestLine, first_non_whitespace, len)};
+	    Str::fromBuffer(request_line.ptr, first_non_whitespace, request_line.len)};
 }
 
 HTTPClientParser::HTTPClientParser()
@@ -58,39 +58,41 @@ HTTP::ParseResult HTTPClientParser::parseBlock(EthernetClient &client)
 
 	index_t bytes_in_buffer = bytes_read;
 
+	const auto buffer_as_string = SizedString{m_buffer, bytes_in_buffer};
+
 	if (!m_props_parsed) {
 		m_props_parsed = true;
 
-		const auto props_end = Str::find(m_buffer, bytes_read, '\n');
+		const auto props_end = Str::find(SizedString{m_buffer, bytes_read}, '\n');
 		if (props_end == Str::NOT_FOUND) {
 			logger.error("Invalid request from ", ip_to_string(client.remoteIP()), "; URI is too long");
 			return HTTP::FAIL;
 		}
 
-		props = extractRequestProps(m_buffer, props_end);
+		props = extractRequestProps(SizedString{m_buffer, props_end});
 		memmove(m_buffer, m_buffer + props_end + 1, bytes_read - props_end - 1);
 
 		bytes_in_buffer -= props_end + 1;
 	}
 
-	size_t new_line_char = Str::find(m_buffer, bytes_in_buffer, '\n');
+	size_t new_line_char = Str::find(buffer_as_string, '\n');
 
 	index_t offset = 0;
 	while (new_line_char != Str::NOT_FOUND && new_line_char != 0) {
 		const index_t extraction_length = m_buffer[new_line_char - 1] == '\r' ? new_line_char - 1 : new_line_char;
-		const auto header = extractHeader(m_buffer + offset, extraction_length - offset);
+		const auto header = extractHeader(SizedString{m_buffer + offset, extraction_length - offset});
 
 		if (header.name != HTTP::ClientHeader::ch_unknown)
 			headers.push_back(header);
 
 		offset = new_line_char + 1;
-		new_line_char = Str::find(m_buffer, bytes_in_buffer, '\n', offset);
+		new_line_char = Str::find(buffer_as_string, '\n', offset);
 	}
 
 	if (bytes_read < EK_HTTP_BUFFER_SIZE)
 		return HTTP::SUCCESS;
 
-	const size_t last_newline_in_buffer = Str::findLast(m_buffer, bytes_in_buffer, '\n');
+	const size_t last_newline_in_buffer = Str::findLast(buffer_as_string, '\n');
 
 	if (last_newline_in_buffer == 0 || last_newline_in_buffer == Str::NOT_FOUND) {
 		logger.error("Invalid request from ", ip_to_string(client.remoteIP()), "; line over " __EK_MACRO_STRING(EK_HTTP_BUFFER_SIZE) " chars");

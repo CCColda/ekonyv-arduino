@@ -18,7 +18,7 @@ SessionMiddleware::SessionMiddleware(
 
 	FixedBuffer<16> token_value;
 
-	string_to_fixed_buffer<16>(parameter.value.c_str(), parameter.value.length(), token_value);
+	string_to_fixed_buffer<16>(SizedString::fromString(parameter.value), token_value);
 
 	const auto session_info = global::db.session.check(token_value);
 

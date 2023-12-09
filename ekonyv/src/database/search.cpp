@@ -21,8 +21,8 @@ Between parseBetween(const String &str)
 		return Between{0, 0};
 
 	return Between{
-	    Str::fixedAtoi<uint64_t>(str.c_str(), dash),
-	    Str::fixedAtoi<uint64_t>(str.c_str() + dash + 1, str.length() - dash - 1)};
+	    Str::fixedAtoi<uint64_t>(SizedString{str.c_str(), static_cast<unsigned int>(dash)}),
+	    Str::fixedAtoi<uint64_t>(SizedString{str.c_str() + dash + 1, str.length() - static_cast<unsigned int>(dash) - 1})};
 }
 } // namespace
 
@@ -50,7 +50,7 @@ Between parseBetween(const String &str)
 	const auto search_param = ParameterMiddleware(str('s', term_index), path, prep);
 
 	const auto header_index = Str::compareToMap(
-	    search_param.value.c_str(), search_param.value.length(),
+	    SizedString::fromString(search_param.value),
 	    headers, num_headers);
 
 	if (header_index == Str::NOT_FOUND)
@@ -65,7 +65,7 @@ Between parseBetween(const String &str)
 		const auto search_param = ParameterMiddleware(str(SEARCH_TYPES[i], term_index), path, prep);
 		if (search_param) {
 			result.search_type = (SearchType)i;
-			result.statement = Str::urlDecode(search_param.value.c_str(), search_param.value.length());
+			result.statement = Str::urlDecode(SizedString::fromString(search_param.value));
 			break;
 		}
 	}
@@ -74,7 +74,7 @@ Between parseBetween(const String &str)
 
 	if (relation_param) {
 		const auto relation_index = Str::compareToMap(
-		    relation_param.value.c_str(), relation_param.value.length(),
+		    SizedString::fromString(relation_param.value),
 		    RELATION_TYPES, sr_size);
 
 		if (relation_index != Str::NOT_FOUND)
@@ -164,7 +164,7 @@ Between parseBetween(const String &str)
 				                      : *(uint64_t *)header_address));
 
 				if (term.search_type == VALUE) {
-					const uint64_t value = Str::fixedAtoi<uint64_t>(term.statement.c_str(), term.statement.length());
+					const uint64_t value = Str::fixedAtoi<uint64_t>(SizedString::fromString(term.statement));
 					term_match = value == field_value;
 				}
 				else if (term.search_type == BETWEEN) {
@@ -172,7 +172,7 @@ Between parseBetween(const String &str)
 					term_match = btw.low <= field_value && field_value <= btw.high;
 				}
 				else if (term.search_type == BINARY_AND) {
-					term_match = (field_value & Str::fixedAtoi<uint8_t>(term.statement.c_str(), term.statement.length())) != 0;
+					term_match = (field_value & Str::fixedAtoi<uint8_t>(SizedString::fromString(term.statement))) != 0;
 				}
 
 				break;

@@ -6,6 +6,8 @@
 #include "../arduino/logger.h"
 #include "../config.h"
 
+#include "../types/sized_string.h"
+
 #include <Ethernet.h>
 #include <Vector.h>
 
@@ -23,8 +25,8 @@ private:
 	HTTP::ClientHeaderPair m_header_buf[HTTP::ClientHeader::ch_size];
 
 private:
-	static HTTP::ClientRequestProps extractRequestProps(const char *requestLine, index_t len);
-	static HTTP::ClientHeaderPair extractHeader(const char *requestLine, index_t len);
+	static HTTP::ClientRequestProps extractRequestProps(const SizedString &request_line);
+	static HTTP::ClientHeaderPair extractHeader(const SizedString &request_line);
 
 public:
 	HTTP::ClientRequestProps props;

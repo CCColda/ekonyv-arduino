@@ -30,12 +30,12 @@ String byte_to_string(const byte &b)
 	                : String((unsigned int)b, 0x10);
 }
 
-byte string_to_byte(const char *str, size_t len)
+byte string_to_byte(const SizedString& str)
 {
-	if (len < 2)
+	if (str.len < 2)
 		return 0x00;
 
-	return (char_to_nibble(str[0]) << 4) | char_to_nibble(str[1]);
+	return (char_to_nibble(str.ptr[0]) << 4) | char_to_nibble(str.ptr[1]);
 }
 
 String mac_to_string(const byte *mac)

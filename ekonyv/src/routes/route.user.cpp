@@ -16,11 +16,11 @@ User getUserFromParameters(const String &path, uint32_t prep)
 	const auto flags = ParameterMiddleware(USER_HEADERS[UH_FLAGS], BOOK_HEADER_LENGTHS[UH_FLAGS], path, prep);
 	const auto username = ParameterMiddleware(USER_HEADERS[UH_USERNAME], BOOK_HEADER_LENGTHS[UH_USERNAME], path, prep);
 
-	result.id = id ? Str::fixedAtoi<uint32_t>(id.value.c_str(), id.value.length()) : 0;
-	result.flags = flags ? Str::fixedAtoi<uint8_t>(flags.value.c_str(), flags.value.length()) : 0;
+	result.id = id ? Str::fixedAtoi<uint32_t>(SizedString::fromString(id.value)) : 0;
+	result.flags = flags ? Str::fixedAtoi<uint8_t>(SizedString::fromString(flags.value)) : 0;
 
 	if (username) {
-		const auto decoded = Str::urlDecode(username.value.c_str(), username.value.length());
+		const auto decoded = Str::urlDecode(SizedString::fromString(username.value));
 
 		result.username_len = min(decoded.length(), sizeof(Book::title));
 		memcpy(result.username, decoded.c_str(), result.username_len);
@@ -103,7 +103,7 @@ int deleteUserHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &
 	if (!id)
 		return id.sendMissingResponse(client);
 
-	const auto stored_user = global::db.user.getByID(Str::fixedAtoi<uint16_t>(id.value.c_str(), id.value.length()));
+	const auto stored_user = global::db.user.getByID(Str::fixedAtoi<uint16_t>(SizedString::fromString(id.value)));
 
 	if (!stored_user.success) {
 		HTTPServer::writeStaticHTMLResponse(HTTPResponse::HTML_INVALID_USER, client);
