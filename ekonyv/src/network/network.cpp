@@ -78,10 +78,10 @@ bool Network::connect()
 	return true;
 }
 
-int Network::maintain()
+void Network::maintain()
 {
 	if (m_mode != USING_DHCP)
-		return 0;
+		return;
 
 	switch (Ethernet.maintain()) {
 		case 1: {
