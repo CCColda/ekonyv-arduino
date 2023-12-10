@@ -1,9 +1,14 @@
+/**
+ * @file
+ * @brief Implementation of serial commands.
+ */
+
 #include "serial.h"
-#include "../config.h"
 
 #include "../arduino/utility.h"
-
+#include "../config.h"
 #include "../global/global.h"
+#include "../string/to_string.h"
 
 #include <Arduino.h>
 
@@ -39,20 +44,22 @@ void update()
 
 			auto file = SD.open(path, FILE_READ);
 			if (file) {
-				int byte_n = 0;
 				while (file.available()) {
-					const auto byte = file.read();
-					Serial.print((byte < 0x10 ? "0" : "") + String(byte, 0x10u));
-					if (byte_n > 16) {
-						Serial.println();
-						byte_n = 0;
+					byte line_buffer[16];
+
+					const auto bytes_read = file.readBytes(line_buffer, 16);
+
+					for (size_t i = 0; i < bytes_read; i++) {
+						Serial.print(byte_to_string(line_buffer[i]));
+						Serial.write(' ');
 					}
-					else {
-						byte_n++;
-					}
+
+					Serial.println();
 				}
-				Serial.println();
 				Serial.println("---- dumped \"" + path + "\" ----");
+			}
+			else {
+				Serial.println("Failed to open file.\n");
 			}
 			file.close();
 		}
@@ -69,8 +76,18 @@ void update()
 				Serial.println();
 				Serial.println("---- dumped \"" + path + "\" ----");
 			}
+			else {
+				Serial.println("Failed to open file.\n");
+			}
+
 			file.close();
 		}
+	}
+	else {
+		Serial.println("Available commands:\n"
+		               "halt            - save and stop execution\n"
+		               "rmf <path>      - remove file\n"
+		               "dumpf[h] <path> - dump a file to serial (hexadecimal format if 'h' is specified)\n");
 	}
 }
 } // namespace SerialCommands
