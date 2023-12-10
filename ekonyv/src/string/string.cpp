@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Implementation of string functions.
+ */
+
 #include "./string.h"
 
 namespace Str {

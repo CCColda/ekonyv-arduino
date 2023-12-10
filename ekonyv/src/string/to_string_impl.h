@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Implementation of template string conversion functions.
+ */
+
 #ifndef EKONYV_TO_STRING_IMPL_H
 #define EKONYV_TO_STRING_IMPL_H
 

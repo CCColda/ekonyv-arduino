@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Functions related to string conversion.
+ */
+
 #ifndef EKONYV_TO_STRING_H
 #define EKONYV_TO_STRING_H
 

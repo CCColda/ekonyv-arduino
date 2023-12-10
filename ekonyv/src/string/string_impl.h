@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Implementation of template string functions.
+ */
+
 #ifndef EKONYV_STRING_IMPL_H
 #define EKONYV_STRING_IMPL_H
 

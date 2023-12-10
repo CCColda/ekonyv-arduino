@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Implementation of string conversion functions.
+ */
+
 #include "to_string.h"
 
 namespace {
@@ -30,7 +35,7 @@ String byte_to_string(const byte &b)
 	                : String((unsigned int)b, 0x10);
 }
 
-byte string_to_byte(const SizedString& str)
+byte string_to_byte(const SizedString &str)
 {
 	if (str.len < 2)
 		return 0x00;

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief String functions.
+ */
+
 #ifndef EKONYV_STRING_H
 #define EKONYV_STRING_H
 

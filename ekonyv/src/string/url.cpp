@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Implementation of URL functions
+ */
+
 #include "url.h"
 
 #include "to_string.h"

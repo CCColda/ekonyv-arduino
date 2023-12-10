@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief String hashing implementation.
+ */
+
 #include "hash.h"
 
 #include "../config.h"

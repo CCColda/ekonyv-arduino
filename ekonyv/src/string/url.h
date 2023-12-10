@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Functions responsible for the encoding/decoding of urls.
+ */
+
 #ifndef EKONYV_URL_H
 #define EKONYV_URL_H
 
