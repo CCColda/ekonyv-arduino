@@ -1,12 +1,17 @@
+/**
+ * @file
+ * @brief Defines types for parsing HTTP packets.
+ */
+
 #ifndef EKONYV_HTTP_H
 #define EKONYV_HTTP_H
 
 #include "../config.h"
 
 #include <Arduino.h>
-#include <Ethernet.h>
 
 namespace HTTP {
+//! @brief Enumerates HTTP request methods.
 enum Method : uint8_t {
 	GET,
 	PUT,
@@ -17,6 +22,7 @@ enum Method : uint8_t {
 	m_unknown
 };
 
+//! @brief Enumerates HTTP client request headers.
 enum ClientHeader : uint8_t {
 	AUTHORIZATION,
 	ACCEPT,
@@ -25,6 +31,7 @@ enum ClientHeader : uint8_t {
 	ch_unknown
 };
 
+//! @brief Enumerates HTTP server response headers.
 enum ServerHeader : uint8_t {
 	CONTENT_TYPE,
 	CONNECTION,
@@ -34,6 +41,7 @@ enum ServerHeader : uint8_t {
 	sh_unknown
 };
 
+//! @brief Enumerates HTTP parsing statuses.
 enum ParseResult : uint8_t {
 	FAIL,
 	SUCCESS,
@@ -58,8 +66,13 @@ struct HeaderPair {
 using ClientHeaderPair = HeaderPair<ClientHeader>;
 using ServerHeaderPair = HeaderPair<ServerHeader>;
 
+//! @brief Holds the string representations of HTTP methods
 extern const char *METHOD_MAP[Method::m_size];
+
+//! @brief Holds the string representations of HTTP client request headers
 extern const char *CLIENT_HEADERS[ClientHeader::ch_size];
+
+//! @brief Holds the string representations of HTTP server response headers
 extern const char *SERVER_HEADERS[ServerHeader::sh_size];
 
 } // namespace HTTP
