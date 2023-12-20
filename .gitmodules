@@ -1,0 +1,3 @@
+[submodule "ekonyv/src/EthernetLarge"]
+	path = ekonyv/src/EthernetLarge
+	url = https://github.com/CCCOlda/EthernetLarge-Local
