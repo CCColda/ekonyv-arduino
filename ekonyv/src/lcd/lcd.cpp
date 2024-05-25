@@ -46,7 +46,33 @@ void LCD::update()
 
 	old_flag = flag;
 
+	bool print_time = true;
+
 	switch (flag) {
+		case STATE_HALTING: {
+			lcd.setCursor(1, 0);
+			lcd.print("EKonyv: " EK_VERSION);
+			lcd.setCursor(0, 2);
+			lcd.print("Gombnyomasra var");
+			print_time = false;
+			break;
+		}
+		case STATE_STARTING_SD: {
+			lcd.setCursor(1, 0);
+			lcd.print("EKonyv: " EK_VERSION);
+			lcd.setCursor(0, 1);
+			lcd.print("SD inditasa...");
+			print_time = false;
+			break;
+		}
+		case STATE_STARTING_ETH: {
+			lcd.setCursor(1, 0);
+			lcd.print("EKonyv: " EK_VERSION);
+			lcd.setCursor(0, 1);
+			lcd.print("Csatlakozas...");
+			print_time = false;
+			break;
+		}
 		case STATE_RUNNING: {
 			lcd.setCursor(1, 0);
 			lcd.print("EKonyv: " EK_VERSION);
@@ -70,11 +96,22 @@ void LCD::update()
 
 			break;
 		}
+		case STATE_ERROR: {
+			lcd.setCursor(0, 0);
+			lcd.print("Futasideju hiba!");
+			lcd.setCursor(0, 1);
+			lcd.print((char*)state.error.data);
+			print_time = false;
+
+			break;
+		}
 		default: {
 			break;
 		}
 	}
 
-	lcd.setCursor(4, 1);
-	lcd.print(timeToHHMMSS(global::time()));
+	if (print_time) {
+		lcd.setCursor(4, 1);
+		lcd.print(timeToHHMMSS(global::time()));
+	}
 }

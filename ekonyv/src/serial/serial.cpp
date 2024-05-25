@@ -24,7 +24,7 @@ void update()
 
 	if (command == "halt") {
 		global::db.save(global::time());
-		Utility::halt("Halt command received");
+		Utility::halt("Halt command received", "SERIAL_CMD_HALT");
 	}
 	else if (command.startsWith("rmf")) {
 		const auto space = command.indexOf(' ') + 1;

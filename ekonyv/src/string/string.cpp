@@ -11,7 +11,7 @@ size_t find(const SizedString &str, char chr, size_t start)
 	if (start >= str.len)
 		return NOT_FOUND;
 
-	const char *ptr = reinterpret_cast<const char *>(memchr(str.ptr + start, str.len - start, chr));
+	const char *ptr = reinterpret_cast<const char *>(memchr(str.ptr + start, chr, str.len - start));
 	return (ptr == NULL) ? NOT_FOUND : ptr - str.ptr;
 }
 

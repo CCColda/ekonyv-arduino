@@ -20,10 +20,15 @@
 #include "src/serial/serial.h"
 
 auto logger = Logger("MAIN");
+bool startstopbuttondown = false;
 
 void setup()
 {
 	pinMode(EK_HANGING_ANALOG_PIN, INPUT);
+	pinMode(EK_STARTSTOP_BUTTON_PIN, INPUT);
+
+	pinMode(EK_LED_RUNNING_PIN, OUTPUT);
+	pinMode(EK_LED_ERROR_PIN, OUTPUT);
 
 #if EK_SERIAL
 	Serial.begin(9600);
@@ -48,16 +53,32 @@ void setup()
 #if EK_LCD
 	LCDState::update();
 #endif
+	while(!global::is_running) {
+		if (digitalRead(EK_STARTSTOP_BUTTON_PIN) == HIGH) {
+			global::is_running = true;
+			startstopbuttondown = true;
+			logger.log("Button pressed, starting...");
+		}
+		else {
+			delay(500);
+		}
+
+#if EK_LCD
+		LCDState::update();
+#endif
+	}
+
+	digitalWrite(EK_LED_RUNNING_PIN, HIGH);
 
 	if (!global::sd.init()) {
 		// logger.error("Failed initializing SD card");
-		Utility::halt("Failed initializing SD card");
+		Utility::halt("Failed initializing SD card", "SD_INIT_FAIL");
 	}
 	else {
 		logger.log("SD Card connected; ", Storage::infoToString(global::sd.getInfo()));
 	}
 
-#if EK_ETHERNET
+//! Don't run on MockSD
 #if EK_SD
 	if (!SD.exists(EK_DB_ROOT_PATH)) {
 		logger.log("Creating " EK_DB_ROOT_PATH " on SD card...");
@@ -68,11 +89,16 @@ void setup()
 	}
 #endif
 
+#if EK_LCD
+	LCDState::update();
+#endif
+
+#if EK_ETHERNET
 	if (!global::network.tryConnectUsingDHCP()) {
 		logger.warning("DHCP setup failed; falling back to static IP");
 
 		if (!global::network.connect()) {
-			Utility::halt("Failed connecting using static IP.");
+			Utility::halt("Failed connecting using static IP.", "STATIC_IP_FAIL");
 		}
 	}
 
@@ -103,23 +129,45 @@ void setup()
 
 void loop()
 {
-#if EK_SERIAL
-	SerialCommands::update();
-#endif
+	if (global::is_running) {
+	#if EK_SERIAL
+		SerialCommands::update();
+	#endif
 
-#if EK_ETHERNET
-	global::network.maintain();
-	global::ntp.update();
-	global::server.update();
-	global::requests.update();
-#endif
+	#if EK_ETHERNET
+	
+		global::network.maintain();
+		global::ntp.update();
+		global::server.update();
+		// global::requests.update();
+	
+	#endif
 
-	global::db.update(global::time());
+		global::db.update(global::time());
 
-#if EK_LCD
-	LCDState::update();
-#endif
+		global::eventqueue.execute(5);
+	}
 
-	global::eventqueue.execute(5);
+	if (digitalRead(EK_STARTSTOP_BUTTON_PIN) == LOW && startstopbuttondown) {
+		startstopbuttondown = false;
+
+		if (global::is_running) {
+			global::db.save(global::time());
+			global::is_running = false;
+			digitalWrite(EK_LED_RUNNING_PIN, LOW);
+		}
+		else {
+			global::is_running = true;
+			digitalWrite(EK_LED_RUNNING_PIN, HIGH);
+		}
+	}
+	else if (digitalRead(EK_STARTSTOP_BUTTON_PIN) == HIGH) {
+		startstopbuttondown = true;
+	}
+
+	#if EK_LCD
+		LCDState::update();
+	#endif
+
 	delayMicroseconds(500000);
 }

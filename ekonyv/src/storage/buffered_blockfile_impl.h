@@ -3,6 +3,10 @@
 
 #include "buffered_blockfile_def.h"
 
+//! @bug When deleting the files, the data stays on the SD card,
+//!      which makes database reads unreliable. On deletion,
+//!      the SD-card must be formatted.
+
 template <size_t RecordSize, size_t BufferSize>
 BufferedBlockfile<RecordSize, BufferSize>::BufferedBlockfile(const char *path)
     : m_file(path), m_buffer(m_buffer_data), m_num_records(0) {}

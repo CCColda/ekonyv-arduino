@@ -8,15 +8,18 @@ EthernetUDP ethUDP;
 
 namespace global {
 #if EK_ETHERNET
+
 Network network = Network(EK_ETH_SHIELD_PIN);
 HTTPServer server = HTTPServer();
 NTPClient ntp = NTPClient(ethUDP, EK_NTP_IP, EK_NTP_OFFSET_S);
-HTTPRequestManager requests = HTTPRequestManager();
+// [[deprecated]] HTTPRequestManager requests = HTTPRequestManager();
+
 #endif
 
+bool is_running = EK_DEFAULT_RUNNING;
 Storage sd = Storage(EK_SDCARD_PIN);
 Databases db = Databases();
-EventQueue<32> eventqueue = EventQueue<32>();
+// [[deprecated]] EventQueue<32> eventqueue = EventQueue<32>();
 
 #if EK_LCD
 LCD lcd = LCD(
