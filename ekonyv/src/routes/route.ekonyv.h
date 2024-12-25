@@ -16,9 +16,16 @@ int handler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, E
 #endif
 }
 
+int preflightHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client) {
+#if EK_ETHERNET
+	HTTPServer::writeHTTPHeaders(200, "OK", "text/csv", client);
+#endif
+}
+
 void registerRoute(HTTPServer &server)
 {
 	server.on(HTTP::GET, "/ekonyv", HTTPServer::HandlerBehavior::ALLOW_PARAMETERS, handler);
+	server.on(HTTP::OPTIONS, "/ekonyv", HTTPServer::HandlerBehavior::NONE, handler);
 }
 
 } // namespace EKonyvRoute

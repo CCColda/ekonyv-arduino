@@ -14,6 +14,7 @@ namespace HTTP {
 //! @brief Enumerates HTTP request methods.
 enum Method : uint8_t {
 	GET,
+	OPTIONS,
 	PUT,
 	POST,
 	DELETE,

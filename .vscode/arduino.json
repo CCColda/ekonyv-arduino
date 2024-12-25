@@ -1,6 +1,6 @@
 {
     "board": "arduino:samd:mkrzero",
-    "port": "COM7",
+    "port": "COM4",
     "sketch": "ekonyv/ekonyv.ino",
     "output": "out"
 }

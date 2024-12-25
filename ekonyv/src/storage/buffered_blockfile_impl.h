@@ -43,15 +43,15 @@ bool BufferedBlockfile<RecordSize, BufferSize>::flush()
 
 	for (const Update &update : m_buffer) {
 		switch (update.type) {
-			case UpdateType::APPEND: {
+			case BlockfileUpdateType::APPEND: {
 				m_file.append(update.buffer);
 				break;
 			}
-			case UpdateType::MODIFY: {
+			case BlockfileUpdateType::MODIFY: {
 				m_file.modify(update.n, reinterpret_cast<const void *>(update.buffer));
 				break;
 			}
-			case UpdateType::ERASE: {
+			case BlockfileUpdateType::ERASE: {
 				m_file.erase(update.n);
 				break;
 			}
@@ -68,7 +68,7 @@ template <size_t RecordSize, size_t BufferSize>
 bool BufferedBlockfile<RecordSize, BufferSize>::append(const void *data)
 {
 	auto update = Update{
-	    UpdateType::APPEND,
+	    BlockfileUpdateType::APPEND,
 	    0,
 	    {}};
 
@@ -88,7 +88,7 @@ bool BufferedBlockfile<RecordSize, BufferSize>::modify(uint32_t n, const void *d
 		return false;
 
 	auto update = Update{
-	    UpdateType::MODIFY,
+	    BlockfileUpdateType::MODIFY,
 	    n,
 	    {}};
 
@@ -107,7 +107,7 @@ bool BufferedBlockfile<RecordSize, BufferSize>::erase(uint32_t n)
 
 	if (!tryEraseFromBuffer(n)) {
 		Update update = Update{
-		    UpdateType::ERASE,
+		    BlockfileUpdateType::ERASE,
 		    n,
 		    {}};
 
@@ -131,7 +131,7 @@ bool BufferedBlockfile<RecordSize, BufferSize>::at(uint32_t n, void *out_ptr)
 
 	for (const Update &update : m_buffer) {
 		switch (update.type) {
-			case UpdateType::APPEND: {
+			case BlockfileUpdateType::APPEND: {
 				if (file_num_records == n) {
 					data_ptr = reinterpret_cast<const void *>(update.buffer);
 				}
@@ -139,14 +139,14 @@ bool BufferedBlockfile<RecordSize, BufferSize>::at(uint32_t n, void *out_ptr)
 				file_num_records++;
 				break;
 			}
-			case UpdateType::MODIFY: {
+			case BlockfileUpdateType::MODIFY: {
 				if (update.n == n) {
 					data_ptr = reinterpret_cast<const void *>(update.buffer);
 				}
 
 				break;
 			}
-			case UpdateType::ERASE: {
+			case BlockfileUpdateType::ERASE: {
 				if (update.n <= n) {
 					idx_file++;
 					data_ptr = nullptr;
@@ -192,7 +192,7 @@ bool BufferedBlockfile<RecordSize, BufferSize>::tryEraseFromBuffer(uint32_t n)
 		Update &update = m_buffer[idx_update];
 
 		switch (update.type) {
-			case UpdateType::APPEND: {
+			case BlockfileUpdateType::APPEND: {
 				if (file_num_records == n) {
 					//! @remark @c update is invalid from here
 					m_buffer.remove(idx_update);
@@ -209,7 +209,7 @@ bool BufferedBlockfile<RecordSize, BufferSize>::tryEraseFromBuffer(uint32_t n)
 				break;
 			}
 
-			case UpdateType::MODIFY: {
+			case BlockfileUpdateType::MODIFY: {
 				if (append_removed) {
 					if (update.n == n) {
 						m_buffer.remove(idx_update);
@@ -226,7 +226,7 @@ bool BufferedBlockfile<RecordSize, BufferSize>::tryEraseFromBuffer(uint32_t n)
 				break;
 			}
 
-			case UpdateType::ERASE: {
+			case BlockfileUpdateType::ERASE: {
 				file_num_records--;
 				break;
 			}

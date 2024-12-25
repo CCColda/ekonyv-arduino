@@ -4,6 +4,12 @@
 #include "blockfile.h"
 #include <Vector.h>
 
+enum BlockfileUpdateType : uint8_t {
+	APPEND,
+	MODIFY,
+	ERASE
+};
+
 /**
  * @brief A class for handling buffering in blockfiles.
  * Append/modify/erase operations are buffered until @c flush() is called.
@@ -14,14 +20,8 @@
 template <size_t RecordSize, size_t BufferSize>
 class BufferedBlockfile {
 private:
-	enum UpdateType : uint8_t {
-		APPEND,
-		MODIFY,
-		ERASE
-	};
-
 	struct Update {
-		UpdateType type;
+		BlockfileUpdateType type;
 		uint32_t n;
 		uint8_t buffer[RecordSize];
 	};

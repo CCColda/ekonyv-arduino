@@ -50,7 +50,10 @@ void setup()
 #endif
 #endif
 
+	Serial.println("Starting...");
+
 #if EK_LCD
+	Serial.println("Starting LCD...");
 	LCDState::update();
 #endif
 	while(!global::is_running) {
@@ -60,6 +63,7 @@ void setup()
 			logger.log("Button pressed, starting...");
 		}
 		else {
+			Serial.println("Waiting for start/stop...");
 			delay(500);
 		}
 
@@ -145,7 +149,7 @@ void loop()
 
 		global::db.update(global::time());
 
-		global::eventqueue.execute(5);
+		// global::eventqueue.execute(5);
 	}
 
 	if (digitalRead(EK_STARTSTOP_BUTTON_PIN) == LOW && startstopbuttondown) {

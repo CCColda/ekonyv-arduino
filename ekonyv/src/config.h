@@ -32,12 +32,12 @@
 
 #define EK_PRODUCTION 0
 #define EK_SERIAL 1
-#define EK_SERIAL_INPUT_FOR_START 0
+#define EK_SERIAL_INPUT_FOR_START 1
 #define EK_SD 1
 #define EK_ETHERNET 1
 #define EK_VERBOSE_LOGGING 0
-#define EK_LCD 1
-#define EK_DEFAULT_RUNNING 0
+#define EK_LCD 0
+#define EK_DEFAULT_RUNNING 1
 
 #define EK_SERVER_PORT 80
 
@@ -72,6 +72,9 @@
 
 #define EK_STORAGEDB_PATH EK_DB_ROOT_PATH "/stor.db"
 #define EK_STORAGEDB_BUFFER 8
+
+#define EK_CHANGEDB_PATH EK_DB_ROOT_PATH "/chng.db"
+#define EK_CHANGEDB_BUFFER 8
 
 //! @warning Do not change
 #define EK_MOCK_FILE_SIZE EK_MOCK_FILE_BLOCKS * 512

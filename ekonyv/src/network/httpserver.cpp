@@ -5,6 +5,8 @@
 
 #include "httpclientparser.h"
 
+#include "network.h"
+
 /* private static */ Logger HTTPServer::logger = Logger("HTTP");
 
 /* private static */ bool HTTPServer::is_overloaded = false;
@@ -114,6 +116,14 @@ void HTTPServer::update()
 
 	client.print("Access-Control-Allow-Origin:");
 	client.println("*"); // todo
+
+	client.println("Access-Control-Allow-Private-Network:true");
+	
+	client.print("Private-Network-Access-ID:");
+	client.println(mac_to_string(Network::MAC_ADDRESS));
+
+	client.print("Private-Network-Access-Name:");
+	client.println(EK_NAME "-" EK_VERSION);
 
 	client.println("Connection:close");
 	client.println();

@@ -3,6 +3,7 @@
 namespace HTTP {
 /* extern */ const char *METHOD_MAP[Method::m_size] = {
     "GET",
+    "OPTIONS",
     "PUT",
     "POST",
     "DELETE"};
