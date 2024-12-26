@@ -16,8 +16,6 @@
     const Vector<HTTP::ClientHeaderPair> &headers,
     EthernetClient &client)
 {
-	bool found = false;
-
 	for (size_t i = 0; i < m_handlers.size(); ++i) {
 		const auto &handler = m_handlers.at(i);
 
@@ -30,17 +28,19 @@
 					continue;
 			}
 
-			logger.log("Found handler for " + props.path);
+			logger.log("Found handler for " + String(HTTP::METHOD_MAP[props.method]) + " " + props.path);
 			handler.handler(props.path, headers, client);
-			found = true;
-			break;
+			return;
 		}
 	}
 
-	if (!found) {
-		logger.error("Invalid request for " + props.path + " from " + ip_to_string(client.remoteIP()));
-		writeStaticHTMLResponse(HTTPResponse::HTML_NOT_FOUND, client);
+	if (props.method == HTTP::Method::OPTIONS) {
+		writeHTTPHeaders(200, "OK", "text/csv", client);
+		return;
 	}
+
+	logger.error("Invalid request for " + props.path + " from " + ip_to_string(client.remoteIP()));
+	writeStaticHTMLResponse(HTTPResponse::HTML_NOT_FOUND, client);
 }
 
 HTTPServer::HTTPServer() : m_server(EK_SERVER_PORT), m_handlers(), m_handlerStorage{}

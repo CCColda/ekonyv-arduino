@@ -32,7 +32,8 @@
 
 #define EK_PRODUCTION 0
 #define EK_SERIAL 1
-#define EK_SERIAL_INPUT_FOR_START 1
+#define EK_SERIAL_INPUT_FOR_START 0
+#define EK_START_AFTER_TIMEOUT_MS 5000
 #define EK_SD 1
 #define EK_ETHERNET 1
 #define EK_VERBOSE_LOGGING 0
@@ -78,5 +79,9 @@
 
 //! @warning Do not change
 #define EK_MOCK_FILE_SIZE EK_MOCK_FILE_BLOCKS * 512
+
+#if EK_START_AFTER_TIMEOUT_MS > 0 && EK_SERIAL_INPUT_FOR_START
+#error "Serial input and timeout startups can't be active at the same time."
+#endif
 
 #endif // !defined(EKONYV_CONFIG_H)

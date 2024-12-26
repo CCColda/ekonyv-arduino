@@ -33,7 +33,7 @@ String urlDecode(const SizedString &str)
 	while (i < str.len) {
 		const char c = str.ptr[i];
 		if (c == '%') {
-			if ((i + 3) < str.len) {
+			if ((i + 3) <= str.len) {
 				result += (char)string_to_byte(SizedString{str.ptr + i + 1, 2});
 			}
 			i += 3;

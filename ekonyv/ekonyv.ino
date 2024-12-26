@@ -50,6 +50,11 @@ void setup()
 #endif
 #endif
 
+#if EK_START_AFTER_TIMEOUT_MS > 0
+	Serial.println("Starting after the timeout has elapsed.");
+	delay(EK_START_AFTER_TIMEOUT_MS);
+#endif
+
 	Serial.println("Starting...");
 
 #if EK_LCD

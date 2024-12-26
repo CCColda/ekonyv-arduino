@@ -11,6 +11,7 @@ int loginHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &heade
 int renewHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client);
 int logoutHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client);
 int logoutEverywhereHandler(const String &path, const Vector<HTTP::ClientHeaderPair> &headers, EthernetClient &client);
+
 void registerRoute(HTTPServer &server);
 
 } // namespace LoginRoute
